@@ -255,29 +255,43 @@
         }
       }
 
-      // 2. Жанр (берем первый, самый популярный тег)
+     // 2. Жанр (безопасное извлечение)
       const genreInput = document.getElementById('f_genre');
-      if (!genreInput.value && album.tags && album.tags.tag && album.tags.tag.length > 0) {
-        const tagName = album.tags.tag[0].name;
-        genreInput.value = tagName.charAt(0).toUpperCase() + tagName.slice(1);
-      }
-
-      // 3. Дата релиза (парсим из wiki.published)
-      const dateInput = document.getElementById('f_date');
-      if (!dateInput.value && album.wiki && album.wiki.published) {
-        // Last.fm отдает дату в виде "06 Apr 2012, 18:00"
-        const dateString = album.wiki.published.split(',')[0]; // Отрезаем время, оставляем "06 Apr 2012"
-        const dateObj = new Date(dateString);
+      if (!genreInput.value && album.tags && album.tags.tag) {
+        // Last.fm может вернуть массив тегов или один объект
+        const tags = Array.isArray(album.tags.tag) ? album.tags.tag : [album.tags.tag];
         
-        // Проверяем, удалось ли JS понять эту дату
-        if (!isNaN(dateObj)) {
-          const yyyy = dateObj.getFullYear();
-          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const dd = String(dateObj.getDate()).padStart(2, '0');
-          dateInput.value = `${yyyy}-${mm}-${dd}`; // Формат для <input type="date">
+        if (tags.length > 0 && tags[0].name) {
+          const tagName = tags[0].name;
+          genreInput.value = tagName.charAt(0).toUpperCase() + tagName.slice(1);
         }
       }
 
+      // 3. Дата релиза (с проверкой на ошибки)
+      const dateInput = document.getElementById('f_date');
+      if (!dateInput.value) {
+        if (album.wiki && album.wiki.published) {
+          try {
+            // Очищаем строку от лишних пробелов и отрезаем время
+            const dateString = album.wiki.published.split(',')[0].trim(); 
+            const dateObj = new Date(dateString);
+            
+            // getTime() надежнее проверяет, валидна ли дата
+            if (!isNaN(dateObj.getTime())) {
+              const yyyy = dateObj.getFullYear();
+              const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const dd = String(dateObj.getDate()).padStart(2, '0');
+              dateInput.value = `${yyyy}-${mm}-${dd}`;
+            } else {
+              console.warn('JS не смог расшифровать дату Last.fm:', album.wiki.published);
+            }
+          } catch (e) {
+            console.error('Ошибка при обработке даты:', e);
+          }
+        } else {
+          console.log('У этого альбома в Last.fm нет информации о дате выхода (отсутствует wiki).');
+        }
+      }
       // 4. Треклист
       tracksContainer.innerHTML = '';
       trackCount = 0;
