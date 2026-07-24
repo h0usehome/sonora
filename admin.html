@@ -211,90 +211,77 @@
     });
   }
   
-// Продвинутая функция автоматического поиска (с обходом региональных блокировок)
+// Функция автоматического поиска через Last.fm API
   async function autoFetchAlbumData() {
     const artist = document.getElementById('f_artist').value.trim();
     const title = document.getElementById('f_title').value.trim();
 
-    if (!title) {
-      alert('Введите хотя бы название релиза для поиска!');
+    if (!artist || !title) {
+      alert('Для поиска в Last.fm обязательно нужно указать и Артиста, и Название релиза!');
+      return;
+    }
+
+    // ВСТАВЬТЕ ВАШ КЛЮЧ LAST.FM СЮДА
+    const API_KEY = '3b161b314c4488462ce9102305148fe5'; 
+    
+    if (API_KEY === 'ВАШ_API_КЛЮЧ_ИЗ_ШАГА_1') {
+      alert('Сначала добавьте свой API-ключ Last.fm в код скрипта (переменная API_KEY)!');
       return;
     }
 
     const btn = document.getElementById('btn-autofetch');
     const originalText = btn.textContent;
-    btn.textContent = '⏳ Ищу по всем регионам...';
+    btn.textContent = '⏳ Ищу на Last.fm...';
     btn.disabled = true;
 
     try {
-      let album = null;
-      let foundRegion = 'US';
-      
-      // Ищем поочередно в разных региональных базах iTunes
-      const regions = ['US', 'RU', 'GB', 'DE', 'JP']; 
-      
-      for (const region of regions) {
-        // Пробуем строгий поиск (Артист + Название)
-        let term = encodeURIComponent(`${artist} ${title}`);
-        let searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=3&country=${region}`;
-        let res = await fetch(searchUrl);
-        let data = await res.json();
+      // Формируем запрос к методу album.getinfo (autocorrect=1 исправляет мелкие опечатки)
+      const url = `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${API_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(title)}&autocorrect=1&format=json`;
 
-        // Если строго не нашли, пробуем только по названию альбома
-        if (data.resultCount === 0) {
-          term = encodeURIComponent(title);
-          searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=3&country=${region}`;
-          res = await fetch(searchUrl);
-          data = await res.json();
-        }
+      const res = await fetch(url);
+      const data = await res.json();
 
-        if (data.resultCount > 0) {
-          album = data.results[0];
-          foundRegion = region;
-          break; // Нашли! Прерываем цикл
-        }
-      }
-
-      if (!album) {
-        alert('К сожалению, релиз не найден ни в одном из региональных магазинов iTunes 😔\n\nПридется добавить обложку и треки вручную.');
+      // Проверяем, вернул ли Last.fm ошибку (например, релиз не найден)
+      if (data.error || !data.album) {
+        alert('Last.fm не смог найти этот релиз 😔\n\nПроверьте правильность написания или заполните данные вручную.');
         return;
       }
 
-      // Заполняем данные
-      if (album.artworkUrl100) {
-        const highResCover = album.artworkUrl100.replace('100x100bb', '600x600bb');
-        document.getElementById('f_cover_url').value = highResCover;
+      const album = data.album;
+
+      // 1. Вытягиваем обложку (Last.fm отдает массив картинок разных размеров, берем самую большую - обычно она последняя)
+      if (album.image && album.image.length > 0) {
+        const largestImage = album.image[album.image.length - 1]['#text'];
+        // Проверяем, что ссылка не пустая
+        if (largestImage) {
+           document.getElementById('f_cover_url').value = largestImage;
+        }
       }
 
+      // 2. Подтягиваем жанр (берем первый, самый популярный тег)
       const genreInput = document.getElementById('f_genre');
-      if (!genreInput.value && album.primaryGenreName) {
-        genreInput.value = album.primaryGenreName;
+      if (!genreInput.value && album.tags && album.tags.tag && album.tags.tag.length > 0) {
+        // Last.fm часто возвращает теги в нижнем регистре, можно сделать первую букву заглавной
+        const tagName = album.tags.tag[0].name;
+        genreInput.value = tagName.charAt(0).toUpperCase() + tagName.slice(1);
       }
 
-      const dateInput = document.getElementById('f_date');
-      if (!dateInput.value && album.releaseDate) {
-        dateInput.value = album.releaseDate.split('T')[0];
-      }
-
-      const artistInput = document.getElementById('f_artist');
-      if (!artistInput.value && album.artistName) {
-        artistInput.value = album.artistName;
-      }
-
-      // Получаем треклист, обязательно указывая тот же регион, где нашли альбом!
-      const lookupUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song&country=${foundRegion}`;
-      const lookupRes = await fetch(lookupUrl);
-      const lookupData = await lookupRes.json();
-
+      // 3. Вытягиваем треклист
       tracksContainer.innerHTML = '';
       trackCount = 0;
 
-      const fetchedTracks = lookupData.results.filter(item => item.wrapperType === 'track');
-      
-      if (fetchedTracks.length > 0) {
-        fetchedTracks.forEach(t => addTrackRow(t.trackName));
+      if (album.tracks && album.tracks.track) {
+        // Специфика Last.fm API: если трек всего один, он возвращает объект, а если несколько — массив.
+        // Приводим всё к единому формату массива:
+        const tracks = Array.isArray(album.tracks.track) ? album.tracks.track : [album.tracks.track];
+        
+        if (tracks.length > 0) {
+          tracks.forEach(t => addTrackRow(t.name));
+        } else {
+          addTrackRow(); // пустая строка, если массив треков оказался пустым
+        }
       } else {
-        addTrackRow(); // Если треков нет, оставляем пустую строку
+        addTrackRow(); // пустая строка, если узла tracks вообще нет
       }
 
     } catch (error) {
