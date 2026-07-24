@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonora — Админ-панель</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #121014;
+    --surface-1: #1b181d;
+    --surface-2: #242026;
+    --border: rgba(242,237,230,0.09);
+    --border-strong: rgba(242,237,230,0.25);
+    --text: #f2ede6;
+    --text-muted: rgba(242,237,230,0.5);
+    --accent: #e8a33d;
+    --danger: #d9534f;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 40px 20px; }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 40px; }
+  .logo-mark { font-family: 'Fraunces', serif; font-style: italic; font-weight: 500; font-size: 32px; color: var(--accent); }
+  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin-top: 10px; }
+
+  .panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; }
+  .panel-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+
+  .row { display: flex; gap: 20px; margin-bottom: 20px; }
+  .row > * { flex: 1; }
+  
+  .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  
+  input[type="text"], input[type="number"], input[type="date"], input[type="url"], select, textarea {
+    width: 100%; padding: 12px 16px; background: var(--surface-2); border: 1px solid var(--border); 
+    border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; transition: 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { min-height: 120px; resize: vertical; }
+
+  /* Переключатели (Чекбоксы) */
+  .switch-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; font-weight: 500; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); }
+  .switch-label input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+  /* Блок треков */
+  .track-row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; background: var(--surface-2); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
+  .track-row .num { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); width: 24px; text-align: right; }
+  .btn-remove-track { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 18px; padding: 0 8px; }
+
+  button { font-family: 'Inter', sans-serif; font-weight: 600; cursor: pointer; transition: 0.2s; border-radius: 8px; border: none; }
+  .btn-main { background: var(--accent); color: #121014; padding: 16px; width: 100%; font-size: 16px; margin-top: 20px; }
+  .btn-main:hover { background: #f0b45b; }
+  .btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
+  
+  .btn-sec { background: var(--surface-2); color: var(--text); padding: 10px 16px; border: 1px solid var(--border); font-size: 13px; }
+  .btn-sec:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); }
+
+  #status-msg { margin-top: 20px; text-align: center; font-weight: 500; font-size: 14px; }
+  .success { color: #a3e681; }
+  .error { color: #e68181; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-mark">Sonora</div>
+    <h1>Добавление релиза</h1>
+  </header>
+
+  <form id="release-form">
+    <!-- Блок 1: Основная информация -->
+    <div class="panel">
+      <div class="panel-title">Основная информация</div>
+      <div class="row">
+        <div class="form-group">
+          <label>Артист *</label>
+          <input type="text" id="f_artist" required placeholder="Например: The Midnight">
+        </div>
+        <div class="form-group">
+          <label>Название релиза *</label>
+          <input type="text" id="f_title" required placeholder="Например: Endless Summer">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group">
+          <label>Жанр *</label>
+          <input type="text" id="f_genre" required placeholder="Например: Synthwave">
+        </div>
+        <div class="form-group">
+          <label>Дата выхода</label>
+          <input type="date" id="f_date">
+        </div>
+      </div>
+      <label class="switch-label">
+        <input type="checkbox" id="f_is_new" checked>
+        Показывать в разделе «Последние новинки»
+      </label>
+    </div>
+
+    <!-- Блок 2: Оформление -->
+    <div class="panel">
+      <div class="panel-title">Обложка и тема</div>
+      <div class="form-group">
+        <label>Прямая ссылка на обложку (URL)</label>
+        <input type="url" id="f_cover_url" placeholder="https://example.com/cover.jpg">
+      </div>
+      <div class="form-group">
+        <label>Цветовая тема (если нет обложки)</label>
+        <select id="f_theme">
+          <option value="teal">Teal (Изумрудный)</option>
+          <option value="coral">Coral (Коралловый)</option>
+          <option value="pink">Pink (Розовый)</option>
+          <option value="amber">Amber (Янтарный)</option>
+          <option value="green">Green (Зеленый)</option>
+          <option value="plum">Plum (Сливовый)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Блок 3: Рецензия -->
+    <div class="panel">
+      <div class="panel-title">Оценка и Рецензия</div>
+      <div class="form-group">
+        <label>Оценка (0 - 10)</label>
+        <input type="number" id="f_rating" step="0.1" min="0" max="10" placeholder="Например: 8.5">
+      </div>
+      <div class="form-group">
+        <label>Текст рецензии</label>
+        <textarea id="f_review" placeholder="Напишите пару слов об альбоме..."></textarea>
+      </div>
+    </div>
+
+    <!-- Блок 4: Треки лета -->
+    <div class="panel">
+      <div class="panel-title">Подборка "Треки лета"</div>
+      <label class="switch-label" style="margin-bottom: 16px;">
+        <input type="checkbox" id="f_is_summer" onchange="document.getElementById('summer-settings').style.display = this.checked ? 'flex' : 'none'">
+        Добавить в подборку лета
+      </label>
+      <div class="row" id="summer-settings" style="display: none;">
+        <div class="form-group">
+          <label>Порядковый номер в топе</label>
+          <input type="number" id="f_summer_rank" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>Короткая подпись (опционально)</label>
+          <input type="text" id="f_summer_label" placeholder="Главный хит июля">
+        </div>
+      </div>
+    </div>
+
+    <!-- Блок 5: Треклист -->
+    <div class="panel">
+      <div class="panel-title">Треклист</div>
+      <div id="tracks-container">
+        <!-- Сюда добавляются треки -->
+      </div>
+      <button type="button" class="btn-sec" onclick="addTrackRow()">+ Добавить трек</button>
+    </div>
+
+    <button type="submit" id="btn-submit" class="btn-main">Сохранить релиз в базу</button>
+    <div id="status-msg"></div>
+  </form>
+</div>
+
+<!-- Библиотека Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ==========================================
+  // ВАЖНО: Вставьте ваши ключи Supabase
+  // ==========================================
+  const SUPABASE_URL = 'https://YOUR-PROJECT-REF.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR-ANON-PUBLIC-KEY';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Управление треками
+  const tracksContainer = document.getElementById('tracks-container');
+  let trackCount = 0;
+
+  function addTrackRow() {
+    trackCount++;
+    const div = document.createElement('div');
+    div.className = 'track-row';
+    div.innerHTML = `
+      <span class="num">${trackCount}</span>
+      <input type="text" class="t-title" placeholder="Название трека" required style="flex: 2;">
+      <input type="text" class="t-duration" placeholder="Время (напр. 3:45)" style="flex: 1;">
+      <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
+    `;
+    tracksContainer.appendChild(div);
+  }
+
+  function updateTrackNumbers() {
+    const rows = tracksContainer.querySelectorAll('.track-row');
+    trackCount = 0;
+    rows.forEach(row => {
+      trackCount++;
+      row.querySelector('.num').textContent = trackCount;
+    });
+  }
+
+  // Конвертация формата "3:45" в секунды (225)
+  function parseDuration(timeStr) {
+    if (!timeStr) return null;
+    if (!timeStr.includes(':')) return parseInt(timeStr) || null; // Если ввели просто секунды
+    const parts = timeStr.split(':');
+    const m = parseInt(parts[0]) || 0;
+    const s = parseInt(parts[1]) || 0;
+    return (m * 60) + s;
+  }
+
+  // Отправка формы
+  document.getElementById('release-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const msg = document.getElementById('status-msg');
+    
+    btn.textContent = 'Сохранение...';
+    btn.disabled = true;
+    msg.className = '';
+    msg.textContent = '';
+
+    // Собираем треки
+    const tracks = [];
+    document.querySelectorAll('.track-row').forEach((row, index) => {
+      const title = row.querySelector('.t-title').value.trim();
+      const durStr = row.querySelector('.t-duration').value.trim();
+      if (title) {
+        tracks.push({
+          number: index + 1,
+          title: title,
+          duration: parseDuration(durStr)
+        });
+      }
+    });
+
+    // Формируем payload для нашей SQL-функции
+    const payload = {
+      p_artist_name: document.getElementById('f_artist').value.trim(),
+      p_title: document.getElementById('f_title').value.trim(),
+      p_genre: document.getElementById('f_genre').value.trim(),
+      p_cover_url: document.getElementById('f_cover_url').value.trim() || null,
+      p_cover_theme: document.getElementById('f_theme').value,
+      p_rating: parseFloat(document.getElementById('f_rating').value) || null,
+      p_review: document.getElementById('f_review').value.trim() || null,
+      p_is_new: document.getElementById('f_is_new').checked,
+      p_release_date: document.getElementById('f_date').value || null,
+      p_is_summer_pick: document.getElementById('f_is_summer').checked,
+      p_summer_pick_rank: parseInt(document.getElementById('f_summer_rank').value) || null,
+      p_summer_pick_label: document.getElementById('f_summer_label').value.trim() || null,
+      p_tracks: tracks
+    };
+
+    try {
+      // Вызываем RPC-функцию, которую мы создали ранее
+      const { data, error } = await supabase.rpc('add_new_release', payload);
+      
+      if (error) throw error;
+
+      msg.className = 'success';
+      msg.textContent = '✅ Релиз успешно добавлен в базу!';
+      
+      // Очищаем форму (оставляя базовые настройки)
+      document.getElementById('release-form').reset();
+      tracksContainer.innerHTML = '';
+      trackCount = 0;
+      document.getElementById('summer-settings').style.display = 'none';
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      msg.className = 'error';
+      msg.textContent = '❌ Ошибка: ' + err.message;
+    } finally {
+      btn.textContent = 'Сохранить релиз в базу';
+      btn.disabled = false;
+    }
+  });
+
+  // Добавим 1 пустой трек при загрузке для удобства
+  addTrackRow();
+</script>
+</body>
+</html>
