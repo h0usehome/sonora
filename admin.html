@@ -426,7 +426,8 @@ async function startEdit(id) {
 // Вызываем загрузку списка сразу при открытии страницы
 loadReleases();
   // Отправка формы
-    document.getElementById('release-form').addEventListener('submit', async (e) => {
+    // Отправка формы
+  document.getElementById('release-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     const msg = document.getElementById('status-msg');
@@ -436,7 +437,6 @@ loadReleases();
     msg.className = '';
     msg.textContent = '';
 
-  
     // Собираем треки (без тайминга)
     const tracks = [];
     document.querySelectorAll('.track-row').forEach((row, index) => {
@@ -450,39 +450,92 @@ loadReleases();
       }
     });
 
-    // Формируем payload для нашей SQL-функции
-    const payload = {
-      p_artist_name: document.getElementById('f_artist').value.trim(),
-      p_title: document.getElementById('f_title').value.trim(),
-      p_genre: document.getElementById('f_genre').value.trim(),
-      p_cover_url: document.getElementById('f_cover_url').value.trim() || null,
-      p_cover_theme: document.getElementById('f_theme').value,
-      p_rating: parseFloat(document.getElementById('f_rating').value) || null,
-      p_review: document.getElementById('f_review').value.trim() || null,
-      p_is_new: document.getElementById('f_is_new').checked,
-      p_release_date: document.getElementById('f_date').value || null,
-      p_is_summer_pick: document.getElementById('f_is_summer').checked,
-      p_summer_pick_rank: parseInt(document.getElementById('f_summer_rank').value) || null,
-      p_summer_pick_label: document.getElementById('f_summer_label').value.trim() || null,
-      p_tracks: tracks
-    };
+    if (tracks.length === 0) {
+      msg.className = 'error';
+      msg.textContent = '❌ Добавьте хотя бы один трек!';
+      btn.textContent = 'Сохранить релиз в базу';
+      btn.disabled = false;
+      return;
+    }
 
     try {
-      // Вызываем RPC-функцию, которую мы создали ранее
-      const { data, error } = await supabaseClient.rpc('add_new_release', payload);
-      
-      if (error) throw error;
+      if (editingReleaseId) {
+        // --- РЕЖИМ ОБНОВЛЕНИЯ (UPDATE) ---
+        
+        const { error: updateError } = await supabaseClient
+          .from('releases')
+          .update({
+            title: document.getElementById('f_title').value.trim(),
+            genre: document.getElementById('f_genre').value.trim(),
+            cover_url: document.getElementById('f_cover_url').value.trim() || null,
+            cover_theme: document.getElementById('f_theme').value,
+            rating: parseFloat(document.getElementById('f_rating').value) || null,
+            review: document.getElementById('f_review').value.trim() || null,
+            is_new: document.getElementById('f_is_new').checked,
+            release_date: document.getElementById('f_date').value || null,
+            is_summer_pick: document.getElementById('f_is_summer').checked,
+            summer_pick_rank: parseInt(document.getElementById('f_summer_rank').value) || null,
+            summer_pick_label: document.getElementById('f_summer_label').value.trim() || null
+          })
+          .eq('id', editingReleaseId);
 
-      msg.className = 'success';
-      msg.textContent = '✅ Релиз успешно добавлен в базу!';
-      
-      // Очищаем форму (оставляя базовые настройки)
+        if (updateError) throw updateError;
+
+        // Обновляем треки: удаляем старые, пишем новые
+        await supabaseClient.from('tracks').delete().eq('release_id', editingReleaseId);
+        
+        const newTracksToInsert = tracks.map(t => ({
+          release_id: editingReleaseId,
+          title: t.title,
+          track_number: t.number
+        }));
+        
+        const { error: tracksError } = await supabaseClient.from('tracks').insert(newTracksToInsert);
+        if (tracksError) throw tracksError;
+
+        msg.className = 'success';
+        msg.textContent = '✅ Релиз успешно обновлен!';
+
+        // Сбрасываем состояние редактирования
+        editingReleaseId = null;
+        btn.style.backgroundColor = '';
+
+      } else {
+        // --- РЕЖИМ СОЗДАНИЯ (INSERT) ---
+        
+        const payload = {
+          p_artist_name: document.getElementById('f_artist').value.trim(),
+          p_title: document.getElementById('f_title').value.trim(),
+          p_genre: document.getElementById('f_genre').value.trim(),
+          p_cover_url: document.getElementById('f_cover_url').value.trim() || null,
+          p_cover_theme: document.getElementById('f_theme').value,
+          p_rating: parseFloat(document.getElementById('f_rating').value) || null,
+          p_review: document.getElementById('f_review').value.trim() || null,
+          p_is_new: document.getElementById('f_is_new').checked,
+          p_release_date: document.getElementById('f_date').value || null,
+          p_is_summer_pick: document.getElementById('f_is_summer').checked,
+          p_summer_pick_rank: parseInt(document.getElementById('f_summer_rank').value) || null,
+          p_summer_pick_label: document.getElementById('f_summer_label').value.trim() || null,
+          p_tracks: tracks
+        };
+
+        const { error } = await supabaseClient.rpc('add_new_release', payload);
+        if (error) throw error;
+
+        msg.className = 'success';
+        msg.textContent = '✅ Релиз успешно добавлен в базу!';
+      }
+
+      // Очищаем форму и обновляем список релизов
       document.getElementById('release-form').reset();
       tracksContainer.innerHTML = '';
       trackCount = 0;
+      addTrackRow(); // Добавляем одну пустую строку трека для удобства
       document.getElementById('summer-settings').style.display = 'none';
       
+      loadReleases(); // Обновляем список внизу
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
     } catch (err) {
       console.error(err);
       msg.className = 'error';
@@ -492,9 +545,6 @@ loadReleases();
       btn.disabled = false;
     }
   });
-
-  // Добавим 1 пустой трек при загрузке для удобства
-  addTrackRow();
 </script>
 </body>
 </html>
