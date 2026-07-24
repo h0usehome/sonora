@@ -222,7 +222,7 @@
     }
 
     // ВСТАВЬТЕ ВАШ КЛЮЧ LAST.FM СЮДА
-    const API_KEY = '3b161b314c4488462ce9102305148fe5'; 
+    const API_KEY = 'ВАШ_API_КЛЮЧ_ИЗ_ШАГА_1'; 
     
     if (API_KEY === 'ВАШ_API_КЛЮЧ_ИЗ_ШАГА_1') {
       alert('Сначала добавьте свой API-ключ Last.fm в код скрипта (переменная API_KEY)!');
@@ -235,13 +235,11 @@
     btn.disabled = true;
 
     try {
-      // Формируем запрос к методу album.getinfo (autocorrect=1 исправляет мелкие опечатки)
       const url = `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${API_KEY}&artist=${encodeURIComponent(artist)}&album=${encodeURIComponent(title)}&autocorrect=1&format=json`;
 
       const res = await fetch(url);
       const data = await res.json();
 
-      // Проверяем, вернул ли Last.fm ошибку (например, релиз не найден)
       if (data.error || !data.album) {
         alert('Last.fm не смог найти этот релиз 😔\n\nПроверьте правильность написания или заполните данные вручную.');
         return;
@@ -249,39 +247,51 @@
 
       const album = data.album;
 
-      // 1. Вытягиваем обложку (Last.fm отдает массив картинок разных размеров, берем самую большую - обычно она последняя)
+      // 1. Обложка
       if (album.image && album.image.length > 0) {
         const largestImage = album.image[album.image.length - 1]['#text'];
-        // Проверяем, что ссылка не пустая
         if (largestImage) {
            document.getElementById('f_cover_url').value = largestImage;
         }
       }
 
-      // 2. Подтягиваем жанр (берем первый, самый популярный тег)
+      // 2. Жанр (берем первый, самый популярный тег)
       const genreInput = document.getElementById('f_genre');
       if (!genreInput.value && album.tags && album.tags.tag && album.tags.tag.length > 0) {
-        // Last.fm часто возвращает теги в нижнем регистре, можно сделать первую букву заглавной
         const tagName = album.tags.tag[0].name;
         genreInput.value = tagName.charAt(0).toUpperCase() + tagName.slice(1);
       }
 
-      // 3. Вытягиваем треклист
+      // 3. Дата релиза (парсим из wiki.published)
+      const dateInput = document.getElementById('f_date');
+      if (!dateInput.value && album.wiki && album.wiki.published) {
+        // Last.fm отдает дату в виде "06 Apr 2012, 18:00"
+        const dateString = album.wiki.published.split(',')[0]; // Отрезаем время, оставляем "06 Apr 2012"
+        const dateObj = new Date(dateString);
+        
+        // Проверяем, удалось ли JS понять эту дату
+        if (!isNaN(dateObj)) {
+          const yyyy = dateObj.getFullYear();
+          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const dd = String(dateObj.getDate()).padStart(2, '0');
+          dateInput.value = `${yyyy}-${mm}-${dd}`; // Формат для <input type="date">
+        }
+      }
+
+      // 4. Треклист
       tracksContainer.innerHTML = '';
       trackCount = 0;
 
       if (album.tracks && album.tracks.track) {
-        // Специфика Last.fm API: если трек всего один, он возвращает объект, а если несколько — массив.
-        // Приводим всё к единому формату массива:
         const tracks = Array.isArray(album.tracks.track) ? album.tracks.track : [album.tracks.track];
         
         if (tracks.length > 0) {
           tracks.forEach(t => addTrackRow(t.name));
         } else {
-          addTrackRow(); // пустая строка, если массив треков оказался пустым
+          addTrackRow(); 
         }
       } else {
-        addTrackRow(); // пустая строка, если узла tracks вообще нет
+        addTrackRow(); 
       }
 
     } catch (error) {
@@ -293,15 +303,6 @@
     }
   }
   
-  // Конвертация формата "3:45" в секунды (225)
-  function parseDuration(timeStr) {
-    if (!timeStr) return null;
-    if (!timeStr.includes(':')) return parseInt(timeStr) || null; // Если ввели просто секунды
-    const parts = timeStr.split(':');
-    const m = parseInt(parts[0]) || 0;
-    const s = parseInt(parts[1]) || 0;
-    return (m * 60) + s;
-  }
 
   // Отправка формы
   document.getElementById('release-form').addEventListener('submit', async (e) => {
