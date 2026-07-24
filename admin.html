@@ -173,13 +173,22 @@
     <button type="submit" id="btn-submit" class="btn-main">Сохранить релиз в базу</button>
     <div id="status-msg"></div>
   </form>
+  <!-- Секция управления релизами -->
+<hr style="margin: 50px 0; border: 1px solid rgba(255,255,255,0.1);">
+<div class="releases-manager">
+  <h2 style="margin-bottom: 20px;">Существующие релизы</h2>
+  <div id="releases-list" style="display: flex; flex-direction: column; gap: 10px;">
+    <!-- Список релизов загрузится сюда через JS -->
+    <p style="color: #888;">Загрузка списка...</p>
+  </div>
+</div>
 </div>
 
-<!-- Библиотека Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+  <!-- Библиотека Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
   // ==========================================
-  // ВАЖНО: Вставьте ваши ключи Supabase
+  let editingReleaseId = null; // Если null — создаем новый. Если есть ID — обновляем.  
   // ==========================================
   const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
@@ -317,9 +326,107 @@
     }
   }
   
+  // 1. Загрузка списка релизов из базы
+async function loadReleases() {
+  const list = document.getElementById('releases-list');
+  
+  // Тянем данные из вьюхи release_cards (так как в ней уже склеены Артист и Название)
+  const { data, error } = await supabaseClient
+    .from('release_cards')
+    .select('*')
+    .order('created_at', { ascending: false });
 
+  if (error) {
+    list.innerHTML = `<p style="color: red;">Ошибка загрузки: ${error.message}</p>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  if (data.length === 0) {
+    list.innerHTML = '<p>Релизов пока нет.</p>';
+    return;
+  }
+
+  data.forEach(release => {
+    const div = document.createElement('div');
+    div.style = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);';
+    div.innerHTML = `
+      <div>
+        <strong style="color: var(--accent);">${release.artist || 'Артист'}</strong> — ${release.title}
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" onclick="startEdit('${release.release_id}')" style="padding: 5px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">Изменить</button>
+        <button type="button" onclick="deleteRelease('${release.release_id}')" style="padding: 5px 15px; background: #e53935; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// 2. Удаление релиза
+async function deleteRelease(id) {
+  if (!confirm('Вы уверены, что хотите удалить этот релиз? Треки тоже будут удалены.')) return;
+
+  // Сначала удаляем треки, чтобы избежать конфликта внешних ключей (foreign keys)
+  await supabaseClient.from('tracks').delete().eq('release_id', id);
+  
+  // Затем удаляем сам релиз
+  const { error } = await supabaseClient.from('releases').delete().eq('id', id);
+
+  if (error) {
+    alert('Ошибка при удалении: ' + error.message);
+  } else {
+    loadReleases(); // Обновляем список на экране
+  }
+}
+
+// 3. Подготовка формы к редактированию
+async function startEdit(id) {
+  // Получаем сам релиз (при необходимости замените 'artists(name)' на вашу логику связи с артистом)
+  const { data: release } = await supabaseClient
+    .from('releases')
+    .select('*, artists(name)')
+    .eq('id', id)
+    .single();
+
+  // Получаем треклист
+  const { data: tracks } = await supabaseClient
+    .from('tracks')
+    .select('*')
+    .eq('release_id', id)
+    .order('track_number', { ascending: true }); // или просто 'number'
+
+  if (!release) return;
+
+  // Заполняем форму данными из базы
+  document.getElementById('f_title').value = release.title || '';
+  document.getElementById('f_artist').value = release.artists?.name || ''; // Берем имя связанного артиста
+  document.getElementById('f_cover_url').value = release.cover_url || ''; 
+  document.getElementById('f_genre').value = release.genre || '';
+  document.getElementById('f_date').value = release.release_date || '';
+
+  // Очищаем текущие треки в форме и заполняем старыми
+  tracksContainer.innerHTML = '';
+  trackCount = 0;
+  if (tracks && tracks.length > 0) {
+    tracks.forEach(t => addTrackRow(t.title));
+  } else {
+    addTrackRow();
+  }
+
+  // Переводим интерфейс в режим редактирования
+  editingReleaseId = id;
+  const submitBtn = document.querySelector('form button[type="submit"]');
+  submitBtn.textContent = '💾 Сохранить изменения';
+  submitBtn.style.backgroundColor = '#4caf50';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // Плавно скроллим наверх к форме
+}
+
+// Вызываем загрузку списка сразу при открытии страницы
+loadReleases();
   // Отправка формы
-  document.getElementById('release-form').addEventListener('submit', async (e) => {
+    document.getElementById('release-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     const msg = document.getElementById('status-msg');
