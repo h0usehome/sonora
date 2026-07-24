@@ -180,7 +180,7 @@
   const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // Управление треками
   const tracksContainer = document.getElementById('tracks-container');
@@ -262,7 +262,7 @@
 
     try {
       // Вызываем RPC-функцию, которую мы создали ранее
-      const { data, error } = await supabase.rpc('add_new_release', payload);
+      const { data, error } = await supabaseClient.rpc('add_new_release', payload);
       
       if (error) throw error;
 
