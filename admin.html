@@ -211,8 +211,7 @@
     });
   }
   
-  // Функция автоматического поиска обложки и треков
- // Умная функция автоматического поиска обложки и треков
+// Продвинутая функция автоматического поиска (с обходом региональных блокировок)
   async function autoFetchAlbumData() {
     const artist = document.getElementById('f_artist').value.trim();
     const title = document.getElementById('f_title').value.trim();
@@ -224,60 +223,66 @@
 
     const btn = document.getElementById('btn-autofetch');
     const originalText = btn.textContent;
-    btn.textContent = '⏳ Ищу информацию...';
+    btn.textContent = '⏳ Ищу по всем регионам...';
     btn.disabled = true;
 
     try {
-      // Попытка 1: Ищем строго по Артисту и Названию
-      let term = encodeURIComponent(`${artist} ${title}`);
-      let searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=5`;
+      let album = null;
+      let foundRegion = 'US';
       
-      let searchRes = await fetch(searchUrl);
-      let searchData = await searchRes.json();
+      // Ищем поочередно в разных региональных базах iTunes
+      const regions = ['US', 'RU', 'GB', 'DE', 'JP']; 
+      
+      for (const region of regions) {
+        // Пробуем строгий поиск (Артист + Название)
+        let term = encodeURIComponent(`${artist} ${title}`);
+        let searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=3&country=${region}`;
+        let res = await fetch(searchUrl);
+        let data = await res.json();
 
-      // Попытка 2: Если не нашли, ищем только по названию релиза (более широкий поиск)
-      if (searchData.resultCount === 0) {
-        term = encodeURIComponent(title);
-        searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=5`;
-        searchRes = await fetch(searchUrl);
-        searchData = await searchRes.json();
+        // Если строго не нашли, пробуем только по названию альбома
+        if (data.resultCount === 0) {
+          term = encodeURIComponent(title);
+          searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=3&country=${region}`;
+          res = await fetch(searchUrl);
+          data = await res.json();
+        }
+
+        if (data.resultCount > 0) {
+          album = data.results[0];
+          foundRegion = region;
+          break; // Нашли! Прерываем цикл
+        }
       }
 
-      // Если всё равно по нулям — сдаемся и предлагаем ручной ввод
-      if (searchData.resultCount === 0) {
-        alert('К сожалению, база данных не знает этот релиз 😔\n\nНичего страшного! Просто впишите треки вручную. Прямую ссылку на обложку можно получить, кликнув правой кнопкой мыши по картинке в Яндекс Музыке или Bandcamp -> "Копировать URL картинки".');
+      if (!album) {
+        alert('К сожалению, релиз не найден ни в одном из региональных магазинов iTunes 😔\n\nПридется добавить обложку и треки вручную.');
         return;
       }
 
-      // Берем самый первый (наиболее релевантный) результат
-      const album = searchData.results[0];
-
-      // Вытягиваем обложку (меняем 100x100 на 600x600)
+      // Заполняем данные
       if (album.artworkUrl100) {
         const highResCover = album.artworkUrl100.replace('100x100bb', '600x600bb');
         document.getElementById('f_cover_url').value = highResCover;
       }
 
-      // Подтягиваем жанр
       const genreInput = document.getElementById('f_genre');
       if (!genreInput.value && album.primaryGenreName) {
         genreInput.value = album.primaryGenreName;
       }
 
-      // Подтягиваем дату релиза
       const dateInput = document.getElementById('f_date');
       if (!dateInput.value && album.releaseDate) {
         dateInput.value = album.releaseDate.split('T')[0];
       }
 
-      // Если артист был пустой, заполняем его из найденного
       const artistInput = document.getElementById('f_artist');
       if (!artistInput.value && album.artistName) {
         artistInput.value = album.artistName;
       }
 
-      // Ищем треклист по ID альбома
-      const lookupUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
+      // Получаем треклист, обязательно указывая тот же регион, где нашли альбом!
+      const lookupUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song&country=${foundRegion}`;
       const lookupRes = await fetch(lookupUrl);
       const lookupData = await lookupRes.json();
 
@@ -289,7 +294,7 @@
       if (fetchedTracks.length > 0) {
         fetchedTracks.forEach(t => addTrackRow(t.trackName));
       } else {
-        addTrackRow();
+        addTrackRow(); // Если треков нет, оставляем пустую строку
       }
 
     } catch (error) {
