@@ -89,6 +89,10 @@
           <input type="text" id="f_title" required placeholder="Например: Endless Summer">
         </div>
       </div>
+      <!-- Новая кнопка автопоиска -->
+      <button type="button" class="btn-sec" id="btn-autofetch" onclick="autoFetchAlbumData()" style="margin-bottom: 20px; width: 100%; background: rgba(232,163,61,0.1); color: var(--accent); border-color: var(--accent);">
+        ✨ Найти обложку, треклист и жанр автоматически
+      </button>
       <div class="row">
         <div class="form-group">
           <label>Жанр *</label>
@@ -186,14 +190,13 @@
   const tracksContainer = document.getElementById('tracks-container');
   let trackCount = 0;
 
-  function addTrackRow() {
+  function addTrackRow(trackName = '') {
     trackCount++;
     const div = document.createElement('div');
     div.className = 'track-row';
     div.innerHTML = `
       <span class="num">${trackCount}</span>
-      <input type="text" class="t-title" placeholder="Название трека" required style="flex: 2;">
-      <input type="text" class="t-duration" placeholder="Время (напр. 3:45)" style="flex: 1;">
+      <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2;">
       <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
     `;
     tracksContainer.appendChild(div);
@@ -207,7 +210,82 @@
       row.querySelector('.num').textContent = trackCount;
     });
   }
+  
+  // Функция автоматического поиска обложки и треков
+  async function autoFetchAlbumData() {
+    const artist = document.getElementById('f_artist').value.trim();
+    const title = document.getElementById('f_title').value.trim();
 
+    if (!artist || !title) {
+      alert('Сначала введите Артиста и Название релиза!');
+      return;
+    }
+
+    const btn = document.getElementById('btn-autofetch');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Ищу информацию...';
+    btn.disabled = true;
+
+    try {
+      // 1. Ищем альбом в iTunes
+      const term = encodeURIComponent(`${artist} ${title}`);
+      const searchUrl = `https://itunes.apple.com/search?term=${term}&entity=album&limit=1`;
+      
+      const searchRes = await fetch(searchUrl);
+      const searchData = await searchRes.json();
+
+      if (searchData.resultCount === 0) {
+        alert('К сожалению, альбом не найден. Попробуйте уточнить название.');
+        return;
+      }
+
+      const album = searchData.results[0];
+
+      // Вытягиваем обложку (Apple отдает 100x100, мы меняем ссылку на качественные 600x600)
+      if (album.artworkUrl100) {
+        const highResCover = album.artworkUrl100.replace('100x100bb', '600x600bb');
+        document.getElementById('f_cover_url').value = highResCover;
+      }
+
+      // Подтягиваем жанр, если он еще не заполнен
+      const genreInput = document.getElementById('f_genre');
+      if (!genreInput.value && album.primaryGenreName) {
+        genreInput.value = album.primaryGenreName;
+      }
+
+      // Подтягиваем дату релиза
+      const dateInput = document.getElementById('f_date');
+      if (!dateInput.value && album.releaseDate) {
+        dateInput.value = album.releaseDate.split('T')[0];
+      }
+
+      // 2. Ищем треклист по ID альбома (collectionId)
+      const lookupUrl = `https://itunes.apple.com/lookup?id=${album.collectionId}&entity=song`;
+      const lookupRes = await fetch(lookupUrl);
+      const lookupData = await lookupRes.json();
+
+      // Очищаем текущие поля треков
+      tracksContainer.innerHTML = '';
+      trackCount = 0;
+
+      // Фильтруем только треки (в ответе первым идет сам альбом)
+      const fetchedTracks = lookupData.results.filter(item => item.wrapperType === 'track');
+      
+      if (fetchedTracks.length > 0) {
+        fetchedTracks.forEach(t => addTrackRow(t.trackName));
+      } else {
+        addTrackRow(); // Если треков нет, оставляем 1 пустую строку
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert('Ошибка при поиске: ' + error.message);
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+  
   // Конвертация формата "3:45" в секунды (225)
   function parseDuration(timeStr) {
     if (!timeStr) return null;
@@ -229,16 +307,16 @@
     msg.className = '';
     msg.textContent = '';
 
-    // Собираем треки
+  
+    // Собираем треки (без тайминга)
     const tracks = [];
     document.querySelectorAll('.track-row').forEach((row, index) => {
       const title = row.querySelector('.t-title').value.trim();
-      const durStr = row.querySelector('.t-duration').value.trim();
       if (title) {
         tracks.push({
           number: index + 1,
           title: title,
-          duration: parseDuration(durStr)
+          duration: null // Отправляем null, раз тайминга пока нет
         });
       }
     });
