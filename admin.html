@@ -394,7 +394,7 @@ async function startEdit(id) {
     .from('tracks')
     .select('*')
     .eq('release_id', id)
-    .order('track_number', { ascending: true }); // или просто 'number'
+    .order('number', { ascending: true }); // или просто 'number'
 
   if (!release) return;
 
@@ -487,7 +487,7 @@ loadReleases();
         const newTracksToInsert = tracks.map(t => ({
           release_id: editingReleaseId,
           title: t.title,
-          track_number: t.number
+          number: t.number // <-- Исправлено здесь
         }));
         
         const { error: tracksError } = await supabaseClient.from('tracks').insert(newTracksToInsert);
