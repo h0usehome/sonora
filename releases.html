@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonora — все релизы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121014;
+    --surface-1: #1b181d;
+    --surface-2: #242026;
+    --border: rgba(242,237,230,0.09);
+    --border-strong: rgba(242,237,230,0.16);
+    --text: #f2ede6;
+    --text-secondary: rgba(242,237,230,0.62);
+    --text-muted: rgba(242,237,230,0.38);
+    --accent: #e8a33d;
+    --accent-soft: rgba(232,163,61,0.14);
+    --coral: linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%);
+    --teal: linear-gradient(150deg,#2f7a72 0%,#1c4a45 100%);
+    --pink: linear-gradient(150deg,#b5566f 0%,#732f42 100%);
+    --amber: linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%);
+    --green: linear-gradient(150deg,#5c8a4a 0%,#33502a 100%);
+    --plum: linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(18,16,20,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .header-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 0;
+  }
+  .logo{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .logo-mark{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+    font-size:23px; letter-spacing:0.01em;
+  }
+  .logo-wave{
+    display:flex; align-items:flex-end; gap:2px; height:14px; opacity:0.85;
+  }
+  .logo-wave span{
+    width:2px; background:var(--accent); border-radius:2px;
+    animation:wave 1.8s ease-in-out infinite;
+  }
+  .logo-wave span:nth-child(1){height:40%; animation-delay:0s;}
+  .logo-wave span:nth-child(2){height:100%; animation-delay:0.2s;}
+  .logo-wave span:nth-child(3){height:65%; animation-delay:0.4s;}
+  .logo-wave span:nth-child(4){height:85%; animation-delay:0.6s;}
+  @keyframes wave{
+    0%,100%{transform:scaleY(0.6);}
+    50%{transform:scaleY(1);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .logo-wave span{animation:none;}
+  }
+
+  nav{display:flex; gap:28px;}
+  nav a{
+    font-size:13.5px; color:var(--text-secondary);
+    padding:6px 0; position:relative;
+    transition:color 0.2s ease;
+  }
+  nav a:hover{color:var(--text);}
+  nav a.active{color:var(--accent); font-weight:500;}
+  nav a.active::after{
+    content:''; position:absolute; left:0; right:0; bottom:-19px;
+    height:2px; background:var(--accent);
+  }
+
+  .search{
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface-1); border:1px solid var(--border);
+    border-radius:999px; padding:8px 16px;
+    transition:border-color 0.2s ease;
+  }
+  .search:focus-within{border-color:var(--border-strong);}
+  .search svg{flex-shrink:0; opacity:0.5;}
+  .search input{
+    border:none; background:none; outline:none;
+    color:var(--text); font-family:'Inter',sans-serif; font-size:13.5px;
+    width:190px;
+  }
+  .search input::placeholder{color:var(--text-muted);}
+
+  /* ---------- Hero banner ---------- */
+  main{padding:36px 0 80px;}
+  .hero{
+    position:relative; border-radius:var(--radius); overflow:hidden;
+    background:var(--coral);
+    min-height:260px;
+    display:flex; align-items:flex-end;
+    margin-bottom:44px;
+  }
+  .hero::before{
+    content:''; position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 75% 15%, rgba(255,214,140,0.35), transparent 55%),
+      linear-gradient(0deg, rgba(18,16,20,0.92) 0%, rgba(18,16,20,0.15) 65%, transparent 100%);
+  }
+  .hero-content{position:relative; padding:28px 32px; max-width:560px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .hero h1{
+    font-family:'Fraunces',serif; font-weight:500; font-size:34px;
+    line-height:1.15; margin:0 0 10px;
+  }
+  .hero p{
+    font-size:14.5px; color:rgba(242,237,230,0.78); margin:0 0 18px; line-height:1.55;
+  }
+  .hero-track-list{
+    display:flex; gap:18px; flex-wrap:wrap;
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; color:rgba(242,237,230,0.55);
+  }
+  .hero-track-list button{
+    background:none; border:none; color:inherit; font:inherit; cursor:pointer; padding:0;
+  }
+  .hero-track-list button:hover{color:rgba(242,237,230,0.85);}
+
+  /* ---------- Section headings ---------- */
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .section-head h2{
+    font-family:'Fraunces',serif; font-weight:500; font-size:20px; margin:0;
+  }
+  .section-head a{
+    font-size:12.5px; color:var(--text-muted);
+    border-bottom:1px solid transparent;
+  }
+  .section-head a:hover{color:var(--text-secondary); border-color:var(--border-strong);}
+
+  /* ---------- New releases grid ---------- */
+  .releases{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:18px;
+    margin-bottom:56px;
+  }
+  .release-card{
+    position:relative; border-radius:var(--radius-sm); overflow:hidden;
+    aspect-ratio:1/1.05;
+    transition:transform 0.25s ease;
+    cursor:pointer; border:none; padding:0; text-align:left; width:100%; display:block;
+    background:var(--surface-1);
+  }
+  .release-card:hover{transform:translateY(-4px);}
+  .release-card .cover{position:absolute; inset:0; background-size:cover; background-position:center;}
+  .release-card .cover::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(0deg, rgba(0,0,0,0.75) 0%, transparent 55%);
+  }
+  .release-meta{
+    position:absolute; left:0; right:0; bottom:0; padding:12px 14px; z-index:1;
+  }
+  .release-meta .title{font-size:13.5px; font-weight:500; margin:0;}
+  .release-meta .artist{font-size:11.5px; color:rgba(242,237,230,0.65); margin:2px 0 0;}
+  .release-tag{
+    position:absolute; top:10px; left:10px; z-index:1;
+    font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.04em; background:rgba(18,16,20,0.55); backdrop-filter:blur(4px);
+    padding:3px 8px; border-radius:999px; color:rgba(242,237,230,0.8);
+  }
+
+  /* ---------- Two-column: ratings + reviews ---------- */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:48px;}
+
+  .rank-list{list-style:none; margin:0; padding:0;}
+  .rank-list li{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 0; border-bottom:1px solid var(--border);
+  }
+  .rank-list li:last-child{border-bottom:none;}
+  .rank-list li{cursor:pointer;}
+  .rank-num{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-muted);
+    width:20px; flex-shrink:0;
+  }
+  .rank-info{flex:1; min-width:0;}
+  .rank-info .title{font-size:13.5px; font-weight:500; margin:0;}
+  .rank-info .artist{font-size:12px; color:var(--text-muted); margin:2px 0 0;}
+  .rank-score{
+    font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--accent); font-weight:500;
+  }
+
+  .review{
+    display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .review:last-child{border-bottom:none;}
+  .review-cover{
+    width:76px; height:76px; border-radius:var(--radius-sm); flex-shrink:0;
+    background-size:cover; background-position:center;
+  }
+  .review-body .title{font-size:13.5px; font-weight:500; margin:0 0 6px;}
+  .review-body p{
+    font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin:0;
+  }
+
+  /* ---------- Star rating (0-10 scale, 10 stars) ---------- */
+  .stars{display:inline-flex; gap:2px; vertical-align:middle;}
+  .stars .star{
+    position:relative; width:12px; height:12px; flex-shrink:0;
+  }
+  .stars .star svg{position:absolute; inset:0; width:100%; height:100%;}
+  .stars .star .empty{color:var(--border-strong); fill:none; stroke:currentColor; stroke-width:1.5;}
+  .stars .star .fill{color:var(--accent); fill:currentColor; overflow:hidden;
+    clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0);
+  }
+  .stars.lg .star{width:17px; height:17px;}
+  .rating-num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); margin-left:6px;}
+
+  /* ---------- Loading / empty states ---------- */
+  .skeleton{
+    background:linear-gradient(100deg, var(--surface-1) 30%, var(--surface-2) 50%, var(--surface-1) 70%);
+    background-size:200% 100%;
+    animation:shimmer 1.4s ease-in-out infinite;
+    border-radius:var(--radius-sm);
+  }
+  @keyframes shimmer{0%{background-position:200% 0;} 100%{background-position:-200% 0;}}
+  @media (prefers-reduced-motion:reduce){.skeleton{animation:none;}}
+  .state-msg{
+    font-size:13px; color:var(--text-muted); padding:20px 0;
+  }
+  .state-msg.error{color:#d98a7a;}
+
+  /* ---------- Detail modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:50; background:rgba(10,9,11,0.7);
+    backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity 0.2s ease;
+  }
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  .modal{
+    background:var(--surface-1); border:1px solid var(--border-strong);
+    border-radius:var(--radius); max-width:560px; width:100%; max-height:85vh;
+    overflow-y:auto; padding:0;
+    transform:translateY(12px); transition:transform 0.2s ease;
+  }
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-cover{height:180px; position:relative; background-size:cover; background-position:center;}
+  .modal-cover::after{content:''; position:absolute; inset:0; background:linear-gradient(0deg, var(--surface-1) 0%, transparent 60%);}
+  .modal-close{
+    position:absolute; top:14px; right:14px; z-index:2;
+    width:30px; height:30px; border-radius:50%; border:none;
+    background:rgba(18,16,20,0.55); color:var(--text); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{background:rgba(18,16,20,0.8);}
+  .modal-body{padding:6px 28px 28px;}
+  .modal-tag{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.04em; color:var(--accent);
+  }
+  .modal-body h3{font-family:'Fraunces',serif; font-weight:500; font-size:24px; margin:6px 0 2px;}
+  .modal-artist{font-size:13.5px; color:var(--text-secondary); margin:0 0 14px;}
+  .modal-rating{display:flex; align-items:center; margin-bottom:20px;}
+  .modal-section-title{
+    font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.05em; color:var(--text-muted); margin:22px 0 10px;
+  }
+  .modal-review{font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin:0;}
+  .track-list{list-style:none; margin:0; padding:0;}
+  .track-list li{
+    display:flex; align-items:center; gap:12px; padding:9px 0;
+    border-bottom:1px solid var(--border); font-size:13px;
+  }
+  .track-list li:last-child{border-bottom:none;}
+  .track-list .num{font-family:'JetBrains Mono',monospace; color:var(--text-muted); width:20px;}
+  .track-list .t-title{flex:1;}
+  .track-list .dur{font-family:'JetBrains Mono',monospace; color:var(--text-muted); font-size:12px;}
+
+  footer{
+    border-top:1px solid var(--border); padding:24px 0; margin-top:60px;
+  }
+  footer .wrap{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--text-muted);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:920px){
+    .releases{grid-template-columns:repeat(2,1fr);}
+    .split{grid-template-columns:1fr; gap:36px;}
+    nav{display:none;}
+    .search input{width:140px;}
+    .hero h1{font-size:27px;}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 18px;}
+    .releases{grid-template-columns:repeat(2,1fr); gap:12px;}
+    .hero-content{padding:20px;}
+  }
+</style>
+<style>
+  /* ---------- Страница «Все релизы»: тулбар с счётчиком и сортировкой ---------- */
+  .all-releases-head{
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+    flex-wrap:wrap; margin:36px 0 24px;
+  }
+  .all-releases-head h1{
+    font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0;
+  }
+  .all-releases-toolbar{display:flex; align-items:center; gap:16px;}
+  .releases-count{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted);
+  }
+  .sort-select{
+    background:var(--surface-1); border:1px solid var(--border); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:13px; padding:8px 14px; border-radius:999px;
+    cursor:pointer; appearance:none;
+  }
+  .sort-select:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .releases-full{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:18px; margin-bottom:56px;
+  }
+  @media (max-width:1080px){ .releases-full{grid-template-columns:repeat(4,1fr);} }
+  @media (max-width:920px){ .releases-full{grid-template-columns:repeat(3,1fr);} nav{display:none;} .search input{width:140px;} }
+  @media (max-width:640px){ .releases-full{grid-template-columns:repeat(2,1fr); gap:12px;} .all-releases-head{margin:24px 0 18px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">Sonora</span>
+      <span class="logo-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+    </a>
+    <nav aria-label="Разделы сайта">
+      <a href="index.html#releases">Новинки</a>
+      <a href="index.html#rating">Рейтинг</a>
+      <a href="index.html#summer">Треки лета</a>
+      <a href="index.html#reviews">Рецензии</a>
+      <a href="releases.html" class="active">Все релизы</a>
+    </nav>
+    <div class="search" role="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Поиск альбомов, артистов" autocomplete="off">
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="all-releases-head">
+    <h1>Все релизы</h1>
+    <div class="all-releases-toolbar">
+      <span class="releases-count" id="releases-count"></span>
+      <select class="sort-select" id="sort-select" aria-label="Сортировка">
+        <option value="date_desc">Сначала новые</option>
+        <option value="date_asc">Сначала старые</option>
+        <option value="rating_desc">По рейтингу</option>
+        <option value="title_asc">По названию (А-Я)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="releases releases-full" id="releases-grid">
+    <!-- release cards injected by boot() / renderGrid() -->
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Sonora — коллекция музыки</span>
+    <span id="footer-updated">Обновлено —</span>
+  </div>
+</footer>
+
+<!-- Detail modal: тот же компонент, что и на главной странице -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-cover" id="modal-cover">
+      <button class="modal-close" id="modal-close" aria-label="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-tag" id="modal-genre"></p>
+      <h3 id="modal-title"></h3>
+      <p class="modal-artist" id="modal-artist"></p>
+      <div class="modal-rating" id="modal-rating"></div>
+      <div id="modal-tracks-section">
+        <p class="modal-section-title">Треклист</p>
+        <ul class="track-list" id="modal-tracks"></ul>
+      </div>
+      <div id="modal-review-section">
+        <p class="modal-section-title">Рецензия</p>
+        <p class="modal-review" id="modal-review"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Тот же проект Supabase, что и на главной странице.
+const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const RELEASE_CARDS_VIEW = 'release_cards';
+
+const THEME_GRADIENT = {
+  teal:  'var(--teal)',  pink:  'var(--pink)',  amber: 'var(--amber)',
+  green: 'var(--green)', plum:  'var(--plum)',  coral: 'var(--coral)',
+};
+
+// Кэш всех загруженных релизов — модалка открывается без повторных запросов.
+const releaseCache = new Map();
+function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
+
+function coverStyle(release){
+  if (release.cover_url) return `background-image:url('${release.cover_url}')`;
+  return `background:${THEME_GRADIENT[release.cover_theme] || THEME_GRADIENT.teal}`;
+}
+
+function formatDuration(seconds){
+  if (!seconds && seconds !== 0) return '';
+  const m = Math.floor(seconds / 60);
+  const s = String(seconds % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function starsHTML(rating, size = ''){
+  if (rating == null) return '<span class="rating-num">Без оценки</span>';
+  const starSvg = (fillPct) => `
+    <span class="star">
+      <svg class="empty" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
+      <svg class="fill" viewBox="0 0 24 24" style="--fill:${fillPct}%"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
+    </span>`;
+  let out = `<span class="stars ${size}">`;
+  for (let i = 0; i < 10; i++){
+    const fill = Math.max(0, Math.min(100, (rating - i) * 100));
+    out += starSvg(fill);
+  }
+  out += `</span><span class="rating-num">${rating.toFixed(1)}</span>`;
+  return out;
+}
+
+function releaseCardHTML(release){
+  return `
+    <article class="release-card" data-id="${release.id}" tabindex="0" role="button"
+             aria-label="${release.title} — ${release.artist}">
+      <div class="cover" style="${coverStyle(release)}"></div>
+      <span class="release-tag">${release.genre}</span>
+      <div class="release-meta">
+        <p class="title">${release.title}</p>
+        <p class="artist">${release.artist}</p>
+      </div>
+    </article>`;
+}
+
+// ---------------------------------------------------------
+// Модалка — идентична главной странице, читает из общего кэша.
+// ---------------------------------------------------------
+const modalOverlay = document.getElementById('modal-overlay');
+const modalCover = document.getElementById('modal-cover');
+
+function openModal(release){
+  modalCover.style.cssText = coverStyle(release);
+  document.getElementById('modal-genre').textContent = release.genre;
+  document.getElementById('modal-title').textContent = release.title;
+  document.getElementById('modal-artist').textContent = release.artist;
+  document.getElementById('modal-rating').innerHTML = starsHTML(release.rating, 'lg');
+
+  const tracks = release.tracks || [];
+  const tracksSection = document.getElementById('modal-tracks-section');
+  if (tracks.length){
+    tracksSection.style.display = '';
+    document.getElementById('modal-tracks').innerHTML = tracks.map(t => `
+      <li>
+        <span class="num">${String(t.number).padStart(2,'0')}</span>
+        <span class="t-title">${t.title}</span>
+        <span class="dur">${formatDuration(t.duration)}</span>
+      </li>`).join('');
+  } else {
+    tracksSection.style.display = 'none';
+  }
+
+  const reviewSection = document.getElementById('modal-review-section');
+  if (release.review){
+    reviewSection.style.display = '';
+    document.getElementById('modal-review').textContent = release.review;
+  } else {
+    reviewSection.style.display = 'none';
+  }
+
+  modalOverlay.classList.add('open');
+}
+
+function closeModal(){ modalOverlay.classList.remove('open'); }
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-id]');
+  if (!el) return;
+  const release = releaseCache.get(el.dataset.id);
+  if (release) openModal(release);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest?.('[data-id]');
+  if (!el) return;
+  e.preventDefault();
+  const release = releaseCache.get(el.dataset.id);
+  if (release) openModal(release);
+});
+
+// ---------------------------------------------------------
+// Загрузка ВСЕХ релизов одним запросом. Сортировка и поиск
+// после этого работают на уже загруженных данных на клиенте —
+// не нужно повторно ходить в Supabase при каждом переключении.
+// ---------------------------------------------------------
+let allReleases = [];
+
+async function fetchAllReleases(){
+  const { data, error } = await supabase
+    .from(RELEASE_CARDS_VIEW)
+    .select('*')
+    .order('release_date', { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return data;
+}
+
+function sortReleases(releases, sortKey){
+  const sorted = [...releases];
+  switch (sortKey){
+    case 'date_asc':
+      sorted.sort((a, b) => (a.release_date || '').localeCompare(b.release_date || ''));
+      break;
+    case 'rating_desc':
+      sorted.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+      break;
+    case 'title_asc':
+      sorted.sort((a, b) => a.title.localeCompare(b.title, 'ru'));
+      break;
+    case 'date_desc':
+    default:
+      sorted.sort((a, b) => (b.release_date || '').localeCompare(a.release_date || ''));
+  }
+  return sorted;
+}
+
+function pluralReleases(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'релиз';
+  if ([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'релиза';
+  return 'релизов';
+}
+
+function renderGrid(releases){
+  const grid = document.getElementById('releases-grid');
+  document.getElementById('releases-count').textContent =
+    releases.length ? `${releases.length} ${pluralReleases(releases.length)}` : '';
+  grid.innerHTML = releases.length
+    ? releases.map(releaseCardHTML).join('')
+    : `<p class="state-msg">Ничего не найдено.</p>`;
+}
+
+function currentQuery(){
+  return document.getElementById('search-input').value.trim().toLowerCase();
+}
+
+function applyFilterAndSort(){
+  const query = currentQuery();
+  const filtered = query
+    ? allReleases.filter(r =>
+        r.title.toLowerCase().includes(query) || r.artist.toLowerCase().includes(query))
+    : allReleases;
+  renderGrid(sortReleases(filtered, document.getElementById('sort-select').value));
+}
+
+async function boot(){
+  const grid = document.getElementById('releases-grid');
+  grid.innerHTML = Array.from({length: 10}).map(() =>
+    `<div class="skeleton" style="aspect-ratio:1/1.05"></div>`).join('');
+  try {
+    allReleases = await fetchAllReleases();
+    allReleases.forEach(cacheRelease);
+    applyFilterAndSort();
+  } catch (err){
+    console.error(err);
+    grid.innerHTML = `<p class="state-msg error">Не удалось загрузить релизы. Проверьте подключение к Supabase.</p>`;
+  }
+}
+
+document.getElementById('sort-select').addEventListener('change', applyFilterAndSort);
+
+// Поиск фильтрует уже загруженный полный список на клиенте —
+// отдельный запрос к Supabase на каждое нажатие клавиши не нужен.
+let searchDebounce;
+document.getElementById('search-input').addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(applyFilterAndSort, 250);
+});
+
+document.getElementById('footer-updated').textContent =
+  `Обновлено ${new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}`;
+
+boot();
+</script>
+
+</body>
+</html>
