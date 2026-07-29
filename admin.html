@@ -89,7 +89,6 @@
           <input type="text" id="f_title" required placeholder="Например: Endless Summer">
         </div>
       </div>
-      <!-- Новая кнопка автопоиска -->
       <button type="button" class="btn-sec" id="btn-autofetch" onclick="autoFetchAlbumData()" style="margin-bottom: 20px; width: 100%; background: rgba(232,163,61,0.1); color: var(--accent); border-color: var(--accent);">
         ✨ Найти обложку, треклист и жанр автоматически
       </button>
@@ -187,9 +186,7 @@
   <!-- Библиотека Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-  // ==========================================
-  let editingReleaseId = null; // Если null — создаем новый. Если есть ID — обновляем.  
-  // ==========================================
+  let editingReleaseId = null; // null — создаём новый релиз, иначе обновляем существующий
   const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
 
@@ -220,26 +217,13 @@
     });
   }
   
-// ---------------------------------------------------------
-  // Фолбэк для даты релиза: MusicBrainz.
-  // Используется, только если Last.fm не смог отдать дату сам —
-  // например, когда кириллическая и латинская карточки одного
-  // артиста на Last.fm разъехались на разные, не связанные между
-  // собой страницы, и найденная страница просто без даты.
-  // MusicBrainz хранит явные alias'ы (кириллица <-> транслит),
-  // поэтому находит нужного артиста надёжнее, чем текстовый поиск Last.fm.
-  // ---------------------------------------------------------
+  // Фолбэк для даты релиза, если Last.fm не смог её отдать.
   async function fetchMusicBrainzReleaseDate(artist, title) {
     try {
       const escapeQuery = (s) => s.replace(/"/g, '\\"');
       const query = `artist:"${escapeQuery(artist)}" AND releasegroup:"${escapeQuery(title)}"`;
       const url = `https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json&limit=5`;
 
-      // Примечание: браузер не позволяет фронтенду задать заголовок
-      // User-Agent вручную (это запрещённый для fetch заголовок),
-      // поэтому просьбу MusicBrainz идентифицировать приложение
-      // технически выполнить нельзя. Для редких ручных нажатий кнопки
-      // в админке это укладывается в их политику вежливого использования.
       const res = await fetch(url);
       if (!res.ok) return null;
 
@@ -247,8 +231,6 @@
       const groups = data['release-groups'] || [];
       if (!groups.length) return null;
 
-      // MusicBrainz уже сортирует результаты по релевантности (score).
-      // Берём первый результат, у которого действительно есть дата.
       const match = groups.find(g => g['first-release-date']);
       if (!match) return null;
 
@@ -259,9 +241,7 @@
     }
   }
 
-  // MusicBrainz может отдать неполную дату: "2019", "2019-12" или "2019-12-24".
-  // <input type="date"> требует полный YYYY-MM-DD, поэтому недостающие
-  // части дополняем "01", но явно помечаем это как приблизительную дату.
+  // Дополняет неполную дату ("2019" / "2019-12") до YYYY-MM-DD для <input type="date">.
   function normalizeMusicBrainzDate(raw) {
     const parts = String(raw).split('-');
     const approximate = parts.length < 3;
@@ -281,13 +261,7 @@
       return;
     }
 
-    // ВСТАВЬТЕ ВАШ КЛЮЧ LAST.FM СЮДА
-    const API_KEY = '3b161b314c4488462ce9102305148fe5'; 
-    
-    if (API_KEY === 'ВАШ_API_КЛЮЧ_ИЗ_ШАГА_1') {
-      alert('Сначала добавьте свой API-ключ Last.fm в код скрипта (переменная API_KEY)!');
-      return;
-    }
+    const API_KEY = '3b161b314c4488462ce9102305148fe5';
 
     const btn = document.getElementById('btn-autofetch');
     const originalText = btn.textContent;
@@ -327,28 +301,17 @@
         }
       }
 
-      // 3. Дата релиза (с проверкой на ошибки)
-      //    Приоритет источников внутри самого ответа Last.fm:
-      //    1) album.releasedate — настоящее поле даты релиза (то же самое,
-      //       что показано на сайте как "Release Date"), но у Last.fm
-      //       оно нередко приходит пустым или как строка "0" для
-      //       менее популярных/новых релизов.
-      //    2) album.wiki.published — дата публикации вики-статьи,
-      //       используется только как запасной вариант, если (1) не дал результата.
+      // 3. Дата релиза: сперва album.releasedate, затем album.wiki.published как запасной вариант
       const dateInput = document.getElementById('f_date');
 
-      // Last.fm отдаёт "0" вместо отсутствия значения — это нужно отсекать,
-      // иначе parseLastfmDate превратит её в 1970-01-01.
       function parseLastfmDate(raw) {
         if (!raw) return null;
         const trimmed = String(raw).trim();
         if (!trimmed || trimmed === '0') return null;
 
-        // Очищаем строку от лишних пробелов и отрезаем время после запятой
         const dateString = trimmed.split(',')[0].trim();
         const dateObj = new Date(dateString);
 
-        // getTime() надежнее проверяет, валидна ли дата
         if (isNaN(dateObj.getTime())) return null;
 
         const yyyy = dateObj.getFullYear();
@@ -371,10 +334,7 @@
             dateInput.value = parsed;
             console.log(`Дата релиза получена из ${source}:`, parsed);
           } else {
-            // Last.fm не дал ничего — частая причина: у артиста разъехались
-            // кириллическая и латинская карточки на Last.fm, и найденная
-            // страница просто не содержит даты. MusicBrainz хранит явные
-            // alias'ы (кириллица <-> транслит) и находит артиста надёжнее.
+            // Last.fm не дал даты — пробуем MusicBrainz
             const mb = await fetchMusicBrainzReleaseDate(artist, title);
             if (mb) {
               dateInput.value = mb.value;
@@ -466,7 +426,7 @@ async function deleteRelease(id) {
   if (error) {
     alert('Ошибка при удалении: ' + error.message);
   } else {
-    loadReleases(); // Обновляем список на экране
+    loadReleases();
   }
 }
 
@@ -484,7 +444,7 @@ async function startEdit(id) {
     .from('tracks')
     .select('*')
     .eq('release_id', id)
-    .order('number', { ascending: true }); // или просто 'number'
+    .order('number', { ascending: true });
 
   if (!release) return;
 
@@ -510,13 +470,12 @@ async function startEdit(id) {
   submitBtn.textContent = '💾 Сохранить изменения';
   submitBtn.style.backgroundColor = '#4caf50';
 
-  window.scrollTo({ top: 0, behavior: 'smooth' }); // Плавно скроллим наверх к форме
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Вызываем загрузку списка сразу при открытии страницы
 loadReleases();
   // Отправка формы
-    // Отправка формы
   document.getElementById('release-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -535,7 +494,7 @@ loadReleases();
         tracks.push({
           number: index + 1,
           title: title,
-          duration: null // Отправляем null, раз тайминга пока нет
+          duration: null
         });
       }
     });
@@ -577,7 +536,7 @@ loadReleases();
         const newTracksToInsert = tracks.map(t => ({
           release_id: editingReleaseId,
           title: t.title,
-          number: t.number // <-- Исправлено здесь
+          number: t.number
         }));
         
         const { error: tracksError } = await supabaseClient.from('tracks').insert(newTracksToInsert);
@@ -620,10 +579,10 @@ loadReleases();
       document.getElementById('release-form').reset();
       tracksContainer.innerHTML = '';
       trackCount = 0;
-      addTrackRow(); // Добавляем одну пустую строку трека для удобства
+      addTrackRow();
       document.getElementById('summer-settings').style.display = 'none';
       
-      loadReleases(); // Обновляем список внизу
+      loadReleases();
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (err) {
