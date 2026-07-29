@@ -428,13 +428,7 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// =========================================================
-// 1. Supabase connection
-//    Fill these in with your project's values
-//    (Settings → API in the Supabase dashboard).
-//    The anon key is safe to expose client-side as long as
-//    RLS policies (see schema.sql) only allow public SELECT.
-// =========================================================
+// Anon key is safe to expose client-side as long as RLS policies (schema.sql) only allow public SELECT
 const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
 
@@ -468,10 +462,7 @@ function formatDuration(seconds){
   return `${m}:${s}`;
 }
 
-// ---------------------------------------------------------
-// Star rating: 10 stars representing a 0-10 rating, with
-// partial fill for decimals (e.g. 8.4 -> 8 full + 1 at 40%).
-// ---------------------------------------------------------
+// 10 stars representing a 0-10 rating, with partial fill for decimals (e.g. 8.4 -> 8 full + 1 at 40%)
 function starsHTML(rating, size = ''){
   if (rating == null) return '<span class="rating-num">Без оценки</span>';
   const starSvg = (fillPct, key) => `
@@ -488,11 +479,7 @@ function starsHTML(rating, size = ''){
   return out;
 }
 
-// ---------------------------------------------------------
-// Modular release card — used for the "new releases" grid.
-// Cover / title / artist / genre are visible on the card;
-// tracklist + review + full rating open in the shared modal.
-// ---------------------------------------------------------
+// Used in the "new releases" grid; tracklist + review + full rating open in the shared modal
 function releaseCardHTML(release){
   return `
     <article class="release-card" data-id="${release.id}" tabindex="0" role="button"
@@ -529,11 +516,7 @@ function reviewRowHTML(release){
     </div>`;
 }
 
-// ---------------------------------------------------------
-// Modal: shows everything about one release, including the
-// full tracklist and review, driven by data already cached
-// from whichever section the user clicked from.
-// ---------------------------------------------------------
+// Shows the full tracklist and review for one release, from data already cached
 const modalOverlay = document.getElementById('modal-overlay');
 const modalCover = document.getElementById('modal-cover');
 
@@ -592,16 +575,7 @@ document.addEventListener('keydown', (e) => {
   if (release) openModal(release);
 });
 
-// ---------------------------------------------------------
-// Data fetching — one query per section, all reading the
-// same release_cards view so every card has tracks + review
-// + rating available for the modal without extra round trips.
-// ---------------------------------------------------------
-
-// Последние ДОБАВЛЕННЫЕ релизы — сортировка по created_at (моменту
-// добавления в базу), а не по release_date (дате самого релиза).
-// Это две разные вещи: свежедобавленный в каталог альбом может быть
-// и старым релизом, и наоборот.
+// Sorted by created_at (when added to the catalog), not release_date (when the album came out)
 async function fetchLatestAdded(limit = 5){
   const { data, error } = await supabase
     .from(RELEASE_CARDS_VIEW)
@@ -655,9 +629,7 @@ async function searchReleases(query){
   return data;
 }
 
-// ---------------------------------------------------------
 // Render helpers per section, each tolerant of empty/error states
-// ---------------------------------------------------------
 async function renderReleaseGrid(){
   const grid = document.getElementById('releases-grid');
   grid.innerHTML = Array.from({length:5}).map(() =>
@@ -722,9 +694,7 @@ async function renderHero(){
   }
 }
 
-// ---------------------------------------------------------
-// Search: re-renders the new-releases grid against query results
-// ---------------------------------------------------------
+// Re-renders the new-releases grid against query results
 let searchDebounce;
 document.getElementById('search-input').addEventListener('input', (e) => {
   clearTimeout(searchDebounce);
@@ -748,9 +718,7 @@ document.getElementById('search-input').addEventListener('input', (e) => {
   }, 300);
 });
 
-// ---------------------------------------------------------
 // Boot: fetch every section in parallel
-// ---------------------------------------------------------
 document.getElementById('footer-updated').textContent =
   `Обновлено ${new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}`;
 
