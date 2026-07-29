@@ -18,21 +18,14 @@
     --text-secondary: rgba(242,237,230,0.62);
     --text-muted: rgba(242,237,230,0.38);
     --accent: #e8a33d;
+    --coral: linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%);
+    --teal: linear-gradient(150deg,#2f7a72 0%,#1c4a45 100%);
+    --pink: linear-gradient(150deg,#b5566f 0%,#732f42 100%);
+    --amber: linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%);
+    --green: linear-gradient(150deg,#5c8a4a 0%,#33502a 100%);
+    --plum: linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%);
     --radius: 14px;
     --radius-sm: 8px;
-
-    /* Тепловая шкала чарта: от раскалённого золота (#1) до
-       сумеречной сливы (последний трек подборки). Восемь узлов —
-       по числу треков в макете; в реальной вёрстке считается
-       интерполяцией по количеству элементов. */
-    --heat-1: #f2c14e;
-    --heat-2: #eba93f;
-    --heat-3: #e08c3a;
-    --heat-4: #cf6f42;
-    --heat-5: #bd5c52;
-    --heat-6: #a8546c;
-    --heat-7: #8a4d82;
-    --heat-8: #6b5a9e;
   }
 
   *{box-sizing:border-box;}
@@ -45,145 +38,187 @@
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
   :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
   .wrap{max-width:920px;margin:0 auto;padding:0 32px;}
 
-  /* ---------- Hero ---------- */
-  .hero{
-    position:relative;
-    padding:72px 0 56px;
-    overflow:hidden;
+  /* ---------- Header (shared with index.html) ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(18,16,20,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
   }
+  .header-inner{display:flex; align-items:center; justify-content:space-between; padding:18px 0;}
+  .logo{display:flex; align-items:baseline; gap:10px;}
+  .logo-mark{font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:23px;}
+  .logo-wave{display:flex; align-items:flex-end; gap:2px; height:14px; opacity:0.85;}
+  .logo-wave span{width:2px; background:var(--accent); border-radius:2px; animation:wave 1.8s ease-in-out infinite;}
+  .logo-wave span:nth-child(1){height:40%; animation-delay:0s;}
+  .logo-wave span:nth-child(2){height:100%; animation-delay:0.2s;}
+  .logo-wave span:nth-child(3){height:65%; animation-delay:0.4s;}
+  .logo-wave span:nth-child(4){height:85%; animation-delay:0.6s;}
+  @keyframes wave{0%,100%{transform:scaleY(0.6);} 50%{transform:scaleY(1);}}
+  @media (prefers-reduced-motion:reduce){.logo-wave span{animation:none;}}
+
+  nav{display:flex; gap:28px;}
+  nav a{font-size:13.5px; color:var(--text-secondary); padding:6px 0; position:relative; transition:color 0.2s ease;}
+  nav a:hover{color:var(--text);}
+  nav a.active{color:var(--accent); font-weight:500;}
+  nav a.active::after{content:''; position:absolute; left:0; right:0; bottom:-19px; height:2px; background:var(--accent);}
+
+  /* ---------- Hero ---------- */
+  main{padding:36px 0 80px;}
+  .hero{position:relative; padding:36px 0 32px; overflow:hidden;}
   .hero::before{
-    content:'';
-    position:absolute; inset:-20% -10% auto -10%; height:420px;
+    content:''; position:absolute; inset:-20% -10% auto -10%; height:340px;
     background:radial-gradient(ellipse at 30% 20%, rgba(242,193,78,0.16), transparent 60%),
                radial-gradient(ellipse at 80% 10%, rgba(107,90,158,0.14), transparent 55%);
     pointer-events:none;
   }
   .eyebrow{
-    position:relative;
-    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.08em;
-    text-transform:uppercase; color:var(--heat-1); margin:0 0 14px;
+    position:relative; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em;
+    text-transform:uppercase; color:var(--heat-1,#f2c14e); margin:0 0 12px;
     display:flex; align-items:center; gap:10px;
   }
-  .eyebrow::before{
-    content:''; width:22px; height:1px;
-    background:linear-gradient(90deg, var(--heat-1), transparent);
-  }
+  .eyebrow::before{content:''; width:22px; height:1px; background:linear-gradient(90deg,#f2c14e,transparent);}
   .hero h1{
-    position:relative;
-    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
-    font-size:clamp(40px,6vw,64px); line-height:1.05; margin:0 0 18px;
-    background:linear-gradient(100deg, var(--heat-1) 0%, var(--text) 45%);
+    position:relative; font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+    font-size:clamp(32px,5vw,48px); line-height:1.08; margin:0 0 14px;
+    background:linear-gradient(100deg, #f2c14e 0%, var(--text) 45%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
-  .hero p{
-    position:relative;
-    max-width:480px; font-size:15px; color:var(--text-secondary); line-height:1.65; margin:0;
-  }
-  .hero-stat{
-    position:relative;
-    margin-top:28px; display:flex; gap:28px; flex-wrap:wrap;
-  }
-  .hero-stat div{font-family:'JetBrains Mono',monospace;}
-  .hero-stat .num{font-size:22px; color:var(--text); font-weight:500;}
-  .hero-stat .label{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+  .hero p{position:relative; max-width:480px; font-size:14.5px; color:var(--text-secondary); line-height:1.6; margin:0;}
 
   /* ---------- Heat legend ---------- */
   .legend{
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 0; margin-bottom:6px;
+    padding:16px 0 10px; margin-top:20px;
     font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);
     text-transform:uppercase; letter-spacing:0.05em;
   }
   .legend .rail-mini{
-    flex:1; height:2px; margin:0 16px;
-    background:linear-gradient(90deg,
-      var(--heat-1), var(--heat-2), var(--heat-3), var(--heat-4),
-      var(--heat-5), var(--heat-6), var(--heat-7), var(--heat-8));
-    border-radius:2px;
+    flex:1; height:2px; margin:0 16px; border-radius:2px;
+    background:linear-gradient(90deg,#f2c14e,#eba93f,#e08c3a,#cf6f42,#bd5c52,#a8546c,#8a4d82,#6b5a9e);
   }
 
   /* ---------- Chart ---------- */
-  .chart{ position:relative; padding-left:26px; margin-bottom:64px; }
+  .chart{position:relative; padding-left:26px; margin-bottom:24px;}
   .heat-rail{
-    position:absolute; left:0; top:6px; bottom:6px; width:3px;
-    border-radius:3px;
-    background:linear-gradient(180deg,
-      var(--heat-1), var(--heat-2), var(--heat-3), var(--heat-4),
-      var(--heat-5), var(--heat-6), var(--heat-7), var(--heat-8));
+    position:absolute; left:0; top:6px; bottom:6px; width:3px; border-radius:3px;
+    background:linear-gradient(180deg,#f2c14e,#eba93f,#e08c3a,#cf6f42,#bd5c52,#a8546c,#8a4d82,#6b5a9e);
   }
-
   .track-row{
-    position:relative;
-    display:grid;
-    grid-template-columns:64px 56px 1fr auto;
-    align-items:center;
-    gap:18px;
-    padding:18px 16px 18px 22px;
-    border-radius:var(--radius-sm);
-    cursor:pointer;
+    position:relative; display:grid; grid-template-columns:64px 56px 1fr auto;
+    align-items:center; gap:18px; padding:18px 16px 18px 22px; border-radius:var(--radius-sm);
+    cursor:pointer; border:none; width:100%; text-align:left; background:none; color:inherit;
     transition:background 0.2s ease, transform 0.2s ease;
   }
-  .track-row:hover{ background:var(--surface-1); transform:translateX(2px); }
-  .track-row:not(:last-child){ border-bottom:1px solid var(--border); }
-  .track-row:hover:not(:last-child){ border-bottom-color:transparent; }
-
-  .rank-num{
-    font-family:'JetBrains Mono',monospace; font-weight:700;
-    font-size:34px; line-height:1; text-align:right;
-    font-variant-numeric:tabular-nums;
+  .track-row:hover{background:var(--surface-1); transform:translateX(2px);}
+  .track-row:not(:last-child){border-bottom:1px solid var(--border);}
+  .track-row:hover:not(:last-child){border-bottom-color:transparent;}
+  .chart-rank{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:34px; line-height:1;
+    text-align:right; font-variant-numeric:tabular-nums;
   }
-
-  .cover{
-    width:56px; height:56px; border-radius:6px; flex-shrink:0;
-    background-size:cover; background-position:center;
-    box-shadow:0 4px 14px rgba(0,0,0,0.35);
-  }
-
-  .track-info .title{ font-size:15px; font-weight:500; margin:0 0 4px; }
-  .track-info .artist{ font-size:13px; color:var(--text-secondary); margin:0; }
+  .track-cover{width:56px; height:56px; border-radius:6px; flex-shrink:0; background-size:cover; background-position:center; box-shadow:0 4px 14px rgba(0,0,0,0.35);}
+  .track-info .title{font-size:15px; font-weight:500; margin:0 0 4px;}
+  .track-info .artist{font-size:13px; color:var(--text-secondary); margin:0;}
   .track-info .heat-label{
-    display:inline-block; margin-top:7px;
-    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.03em;
-    text-transform:uppercase; color:var(--text-muted);
+    display:inline-block; margin-top:7px; font-family:'JetBrains Mono',monospace; font-size:10.5px;
+    letter-spacing:0.03em; text-transform:uppercase; color:var(--text-muted);
   }
+  .track-genre{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); text-align:right; white-space:nowrap;}
 
-  .track-genre{
-    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);
-    text-align:right; white-space:nowrap;
+  /* ---------- Loading / empty states ---------- */
+  .skeleton{
+    background:linear-gradient(100deg, var(--surface-1) 30%, var(--surface-2) 50%, var(--surface-1) 70%);
+    background-size:200% 100%; animation:shimmer 1.4s ease-in-out infinite; border-radius:var(--radius-sm);
   }
+  @keyframes shimmer{0%{background-position:200% 0;} 100%{background-position:-200% 0;}}
+  @media (prefers-reduced-motion:reduce){.skeleton{animation:none;} .track-row{transition:none;}}
+  .state-msg{font-size:13px; color:var(--text-muted); padding:20px 0;}
+  .state-msg.error{color:#d98a7a;}
 
-  footer{
-    border-top:1px solid var(--border); padding:24px 0 40px;
-    font-size:12px; color:var(--text-muted); text-align:center;
+  /* ---------- Star rating (shared with modal) ---------- */
+  .stars{display:inline-flex; gap:2px; vertical-align:middle;}
+  .stars .star{position:relative; width:12px; height:12px; flex-shrink:0;}
+  .stars .star svg{position:absolute; inset:0; width:100%; height:100%;}
+  .stars .star .empty{color:var(--border-strong); fill:none; stroke:currentColor; stroke-width:1.5;}
+  .stars .star .fill{color:var(--accent); fill:currentColor; overflow:hidden; clip-path:inset(0 calc(100% - var(--fill,0%)) 0 0);}
+  .stars.lg .star{width:17px; height:17px;}
+  .rating-num{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); margin-left:6px;}
+
+  /* ---------- Detail modal (shared with index.html) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; z-index:50; background:rgba(10,9,11,0.7); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    opacity:0; pointer-events:none; transition:opacity 0.2s ease;
   }
+  .modal-overlay.open{opacity:1; pointer-events:auto;}
+  .modal{
+    background:var(--surface-1); border:1px solid var(--border-strong); border-radius:var(--radius);
+    max-width:560px; width:100%; max-height:85vh; overflow-y:auto; padding:0;
+    transform:translateY(12px); transition:transform 0.2s ease;
+  }
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-cover{height:180px; position:relative; background-size:cover; background-position:center;}
+  .modal-cover::after{content:''; position:absolute; inset:0; background:linear-gradient(0deg, var(--surface-1) 0%, transparent 60%);}
+  .modal-close{
+    position:absolute; top:14px; right:14px; z-index:2; width:30px; height:30px; border-radius:50%; border:none;
+    background:rgba(18,16,20,0.55); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{background:rgba(18,16,20,0.8);}
+  .modal-body{padding:6px 28px 28px;}
+  .modal-tag{font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--accent);}
+  .modal-body h3{font-family:'Fraunces',serif; font-weight:500; font-size:24px; margin:6px 0 2px;}
+  .modal-artist{font-size:13.5px; color:var(--text-secondary); margin:0 0 14px;}
+  .modal-rating{display:flex; align-items:center; margin-bottom:20px;}
+  .modal-section-title{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin:22px 0 10px;}
+  .modal-review{font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin:0;}
+  .track-list{list-style:none; margin:0; padding:0;}
+  .track-list li{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
+  .track-list li:last-child{border-bottom:none;}
+  .track-list .num{font-family:'JetBrains Mono',monospace; color:var(--text-muted); width:20px;}
+  .track-list .t-title{flex:1;}
+  .track-list .dur{font-family:'JetBrains Mono',monospace; color:var(--text-muted); font-size:12px;}
+
+  footer{border-top:1px solid var(--border); padding:24px 0; margin-top:20px;}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);}
 
   @media (max-width:640px){
     .wrap{padding:0 18px;}
-    .track-row{ grid-template-columns:40px 44px 1fr; }
-    .track-genre{ display:none; }
-    .rank-num{ font-size:24px; }
-  }
-  @media (prefers-reduced-motion:reduce){
-    .track-row{ transition:none; }
+    nav{display:none;}
+    .track-row{grid-template-columns:40px 44px 1fr;}
+    .track-genre{display:none;}
+    .chart-rank{font-size:24px;}
   }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<header>
+  <div class="wrap header-inner">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">Sonora</span>
+      <span class="logo-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+    </a>
+    <nav aria-label="Разделы сайта">
+      <a href="index.html#releases">Новинки</a>
+      <a href="index.html#rating">Рейтинг</a>
+      <a href="summer.html" class="active">Треки лета</a>
+      <a href="index.html#reviews">Рецензии</a>
+      <a href="releases.html">Все релизы</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
 
   <section class="hero">
     <p class="eyebrow">Июнь — август · чарт сезона</p>
     <h1>Треки лета</h1>
-    <p>Подборка, которая звучала чаще всего на пляжах, балконах и в машинах этим летом. Порядок — по частоте прослушиваний за сезон.</p>
-    <div class="hero-stat">
-      <div><div class="num">24</div><div class="label">трека в чарте</div></div>
-      <div><div class="num">#1</div><div class="label">Kislorod</div></div>
-      <div><div class="num">92 дня</div><div class="label">длительность сезона</div></div>
-    </div>
+    <p>Подборка, которая звучала чаще всего на пляжах, балконах и в машинах этим летом. Порядок — по месту в подборке.</p>
   </section>
 
   <div class="legend">
@@ -192,102 +227,205 @@
     <span>Прохладнее</span>
   </div>
 
-  <section class="chart">
+  <section class="chart" id="chart">
     <div class="heat-rail" aria-hidden="true"></div>
-
-    <article class="track-row" tabindex="0" role="button" style="--rank-color: var(--heat-1)">
-      <span class="rank-num" style="color:var(--heat-1)">01</span>
-      <div class="cover" style="background:linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%)"></div>
-      <div class="track-info">
-        <p class="title">Полуденный зной</p>
-        <p class="artist">Kislorod</p>
-        <span class="heat-label">Хит пляжного сезона</span>
-      </div>
-      <span class="track-genre">Synth-pop</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-2)">02</span>
-      <div class="cover" style="background:linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%)"></div>
-      <div class="track-info">
-        <p class="title">Растворяясь в июле</p>
-        <p class="artist">Prizrak Leta</p>
-        <span class="heat-label">Саундтрек к закату</span>
-      </div>
-      <span class="track-genre">Dream pop</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-3)">03</span>
-      <div class="cover" style="background:linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%)"></div>
-      <div class="track-info">
-        <p class="title">Асфальт плавится</p>
-        <p class="artist">Yuzhny Veter</p>
-        <span class="heat-label">Для дороги на юг</span>
-      </div>
-      <span class="track-genre">Synthwave</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-4)">04</span>
-      <div class="cover" style="background:linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%)"></div>
-      <div class="track-info">
-        <p class="title">Кокос и никотин</p>
-        <p class="artist">Melnitsa Yug</p>
-        <span class="heat-label">Ночной пляжный бар</span>
-      </div>
-      <span class="track-genre">Indie</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-5)">05</span>
-      <div class="cover" style="background:linear-gradient(150deg,#b5566f 0%,#732f42 100%)"></div>
-      <div class="track-info">
-        <p class="title">Тень от вентилятора</p>
-        <p class="artist">Oksana Vetrova</p>
-        <span class="heat-label">Полуденная сиеста</span>
-      </div>
-      <span class="track-genre">Lo-fi</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-6)">06</span>
-      <div class="cover" style="background:linear-gradient(150deg,#b5566f 0%,#732f42 100%)"></div>
-      <div class="track-info">
-        <p class="title">Терраса</p>
-        <p class="artist">Dolgoe Leto</p>
-        <span class="heat-label">Вечерний плейлист</span>
-      </div>
-      <span class="track-genre">Chillwave</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-7)">07</span>
-      <div class="cover" style="background:linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%)"></div>
-      <div class="track-info">
-        <p class="title">Августовский шум</p>
-        <p class="artist">Solnechny Bereg</p>
-        <span class="heat-label">Финал сезона</span>
-      </div>
-      <span class="track-genre">Ambient</span>
-    </article>
-
-    <article class="track-row" tabindex="0" role="button">
-      <span class="rank-num" style="color:var(--heat-8)">08</span>
-      <div class="cover" style="background:linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%)"></div>
-      <div class="track-info">
-        <p class="title">Последний паром</p>
-        <p class="artist">Nochnoy Priboy</p>
-        <span class="heat-label">Прощание с летом</span>
-      </div>
-      <span class="track-genre">Downtempo</span>
-    </article>
-
+    <div class="skeleton" style="height:64px; margin-bottom:2px;"></div>
+    <div class="skeleton" style="height:64px; margin-bottom:2px;"></div>
+    <div class="skeleton" style="height:64px;"></div>
   </section>
 
-  <footer>Чарт обновляется по данным прослушиваний за сезон — тепловая шкала слева отражает место в рейтинге</footer>
+</main>
 
+<footer>
+  <div class="wrap">
+    <span>Sonora — коллекция музыки</span>
+    <span id="footer-updated">Обновлено —</span>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-cover" id="modal-cover">
+      <button class="modal-close" id="modal-close" aria-label="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-tag" id="modal-genre"></p>
+      <h3 id="modal-title"></h3>
+      <p class="modal-artist" id="modal-artist"></p>
+      <div class="modal-rating" id="modal-rating"></div>
+      <div id="modal-tracks-section">
+        <p class="modal-section-title">Треклист</p>
+        <ul class="track-list" id="modal-tracks"></ul>
+      </div>
+      <div id="modal-review-section">
+        <p class="modal-section-title">Рецензия</p>
+        <p class="modal-review" id="modal-review"></p>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const RELEASE_CARDS_VIEW = 'release_cards';
+
+const THEME_GRADIENT = {
+  teal:  'var(--teal)',  pink:  'var(--pink)',  amber: 'var(--amber)',
+  green: 'var(--green)', plum:  'var(--plum)',  coral: 'var(--coral)',
+};
+
+// Узлы тепловой шкалы: от раскалённого золота (#1) до сумеречной сливы (последний трек)
+const HEAT_STOPS = ['#f2c14e','#eba93f','#e08c3a','#cf6f42','#bd5c52','#a8546c','#8a4d82','#6b5a9e'];
+
+function hexToRgb(hex){
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHex([r,g,b]){
+  return '#' + [r,g,b].map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
+}
+function heatColor(t){
+  const segments = HEAT_STOPS.length - 1;
+  const pos = Math.max(0, Math.min(1, t)) * segments;
+  const idx = Math.min(Math.floor(pos), segments - 1);
+  const localT = pos - idx;
+  const a = hexToRgb(HEAT_STOPS[idx]);
+  const b = hexToRgb(HEAT_STOPS[idx + 1]);
+  return rgbToHex(a.map((c, i) => c + (b[i] - c) * localT));
+}
+
+const releaseCache = new Map();
+function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
+
+function coverStyle(release){
+  if (release.cover_url) return `background-image:url('${release.cover_url}')`;
+  return `background:${THEME_GRADIENT[release.cover_theme] || THEME_GRADIENT.teal}`;
+}
+
+function formatDuration(seconds){
+  if (!seconds && seconds !== 0) return '';
+  const m = Math.floor(seconds / 60);
+  const s = String(seconds % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function starsHTML(rating, size = ''){
+  if (rating == null) return '<span class="rating-num">Без оценки</span>';
+  const starSvg = (fillPct) => `
+    <span class="star">
+      <svg class="empty" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
+      <svg class="fill" viewBox="0 0 24 24" style="--fill:${fillPct}%"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
+    </span>`;
+  let out = `<span class="stars ${size}">`;
+  for (let i = 0; i < 10; i++){
+    out += starSvg(Math.max(0, Math.min(100, (rating - i) * 100)));
+  }
+  out += `</span><span class="rating-num">${rating.toFixed(1)}</span>`;
+  return out;
+}
+
+function trackRowHTML(release, index, total){
+  const color = heatColor(total > 1 ? index / (total - 1) : 0);
+  const label = release.summer_pick_label || release.genre;
+  return `
+    <button class="track-row" data-id="${release.id}">
+      <span class="chart-rank" style="color:${color}">${String(index + 1).padStart(2,'0')}</span>
+      <div class="track-cover" style="${coverStyle(release)}"></div>
+      <div class="track-info">
+        <p class="title">${release.title}</p>
+        <p class="artist">${release.artist}</p>
+        <span class="heat-label">${label}</span>
+      </div>
+      <span class="track-genre">${release.genre}</span>
+    </button>`;
+}
+
+const modalOverlay = document.getElementById('modal-overlay');
+const modalCover = document.getElementById('modal-cover');
+
+function openModal(release){
+  modalCover.style.cssText = coverStyle(release);
+  document.getElementById('modal-genre').textContent = release.genre;
+  document.getElementById('modal-title').textContent = release.title;
+  document.getElementById('modal-artist').textContent = release.artist;
+  document.getElementById('modal-rating').innerHTML = starsHTML(release.rating, 'lg');
+
+  const tracks = release.tracks || [];
+  const tracksSection = document.getElementById('modal-tracks-section');
+  if (tracks.length){
+    tracksSection.style.display = '';
+    document.getElementById('modal-tracks').innerHTML = tracks.map(t => `
+      <li>
+        <span class="num">${String(t.number).padStart(2,'0')}</span>
+        <span class="t-title">${t.title}</span>
+        <span class="dur">${formatDuration(t.duration)}</span>
+      </li>`).join('');
+  } else {
+    tracksSection.style.display = 'none';
+  }
+
+  const reviewSection = document.getElementById('modal-review-section');
+  if (release.review){
+    reviewSection.style.display = '';
+    document.getElementById('modal-review').textContent = release.review;
+  } else {
+    reviewSection.style.display = 'none';
+  }
+
+  modalOverlay.classList.add('open');
+}
+
+function closeModal(){ modalOverlay.classList.remove('open'); }
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-id]');
+  if (!el) return;
+  const release = releaseCache.get(el.dataset.id);
+  if (release) openModal(release);
+});
+
+async function fetchSummerPicks(){
+  const { data, error } = await supabase
+    .from(RELEASE_CARDS_VIEW)
+    .select('*')
+    .eq('is_summer_pick', true)
+    .order('summer_pick_rank', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+async function renderChart(){
+  const chart = document.getElementById('chart');
+  try {
+    const picks = await fetchSummerPicks();
+    picks.forEach(cacheRelease);
+    if (!picks.length){
+      chart.innerHTML = `<p class="state-msg">Подборка ещё формируется.</p>`;
+      return;
+    }
+    chart.innerHTML = `<div class="heat-rail" aria-hidden="true"></div>` +
+      picks.map((p, i) => trackRowHTML(p, i, picks.length)).join('');
+  } catch (err){
+    console.error(err);
+    chart.innerHTML = `<p class="state-msg error">Не удалось загрузить чарт. Проверьте подключение к Supabase.</p>`;
+  }
+}
+
+document.getElementById('footer-updated').textContent =
+  `Обновлено ${new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}`;
+
+renderChart();
+</script>
 
 </body>
 </html>
