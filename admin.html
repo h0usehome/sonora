@@ -301,7 +301,9 @@
         }
       }
 
-      // 3. Дата релиза: сперва album.releasedate, затем album.wiki.published как запасной вариант
+      // 3. Дата релиза: приоритет — MusicBrainz, затем Last.fm как запасной
+      //    вариант (в т.ч. чтобы уточнить точный день, если у MusicBrainz
+      //    есть только год/месяц).
       const dateInput = document.getElementById('f_date');
 
       function parseLastfmDate(raw) {
@@ -322,29 +324,35 @@
 
       if (!dateInput.value) {
         try {
-          let parsed = parseLastfmDate(album.releasedate);
-          let source = 'Last.fm releasedate';
+          const mb = await fetchMusicBrainzReleaseDate(artist, title);
 
-          if (!parsed) {
-            parsed = parseLastfmDate(album.wiki && album.wiki.published);
-            source = 'Last.fm wiki.published';
-          }
-
-          if (parsed) {
-            dateInput.value = parsed;
-            console.log(`Дата релиза получена из ${source}:`, parsed);
+          if (mb && !mb.approximate) {
+            // MusicBrainz дал точный день — этого достаточно, в Last.fm смысла нет.
+            dateInput.value = mb.value;
+            console.log('Дата релиза получена из MusicBrainz:', mb.value);
           } else {
-            // Last.fm не дал даты — пробуем MusicBrainz
-            const mb = await fetchMusicBrainzReleaseDate(artist, title);
-            if (mb) {
+            // MusicBrainz либо не нашёл ничего, либо знает только год/месяц —
+            // пробуем уточнить точный день через Last.fm.
+            let parsed = parseLastfmDate(album.releasedate);
+            let source = 'Last.fm releasedate';
+
+            if (!parsed) {
+              parsed = parseLastfmDate(album.wiki && album.wiki.published);
+              source = 'Last.fm wiki.published';
+            }
+
+            if (parsed) {
+              dateInput.value = parsed;
+              console.log(`Дата релиза получена из ${source}:`, parsed);
+            } else if (mb) {
+              // Last.fm тоже не помог — используем приблизительную дату MusicBrainz.
               dateInput.value = mb.value;
               console.log(
-                `Дата релиза получена из MusicBrainz (фолбэк)` +
-                `${mb.approximate ? ', приблизительная — известен только год/месяц' : ''}:`,
+                'Дата релиза получена из MusicBrainz (приблизительная — известен только год/месяц):',
                 mb.value
               );
             } else {
-              console.log('Дату релиза не удалось найти ни в Last.fm, ни в MusicBrainz — заполните вручную.');
+              console.log('Дату релиза не удалось найти ни в MusicBrainz, ни в Last.fm — заполните вручную.');
             }
           }
         } catch (e) {
