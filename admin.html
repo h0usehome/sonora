@@ -277,28 +277,53 @@
       }
 
       // 3. Дата релиза (с проверкой на ошибки)
+      //    Приоритет источников внутри самого ответа Last.fm:
+      //    1) album.releasedate — настоящее поле даты релиза (то же самое,
+      //       что показано на сайте как "Release Date"), но у Last.fm
+      //       оно нередко приходит пустым или как строка "0" для
+      //       менее популярных/новых релизов.
+      //    2) album.wiki.published — дата публикации вики-статьи,
+      //       используется только как запасной вариант, если (1) не дал результата.
       const dateInput = document.getElementById('f_date');
+
+      // Last.fm отдаёт "0" вместо отсутствия значения — это нужно отсекать,
+      // иначе parseLastfmDate превратит её в 1970-01-01.
+      function parseLastfmDate(raw) {
+        if (!raw) return null;
+        const trimmed = String(raw).trim();
+        if (!trimmed || trimmed === '0') return null;
+
+        // Очищаем строку от лишних пробелов и отрезаем время после запятой
+        const dateString = trimmed.split(',')[0].trim();
+        const dateObj = new Date(dateString);
+
+        // getTime() надежнее проверяет, валидна ли дата
+        if (isNaN(dateObj.getTime())) return null;
+
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+
       if (!dateInput.value) {
-        if (album.wiki && album.wiki.published) {
-          try {
-            // Очищаем строку от лишних пробелов и отрезаем время
-            const dateString = album.wiki.published.split(',')[0].trim(); 
-            const dateObj = new Date(dateString);
-            
-            // getTime() надежнее проверяет, валидна ли дата
-            if (!isNaN(dateObj.getTime())) {
-              const yyyy = dateObj.getFullYear();
-              const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-              const dd = String(dateObj.getDate()).padStart(2, '0');
-              dateInput.value = `${yyyy}-${mm}-${dd}`;
-            } else {
-              console.warn('JS не смог расшифровать дату Last.fm:', album.wiki.published);
-            }
-          } catch (e) {
-            console.error('Ошибка при обработке даты:', e);
+        try {
+          let parsed = parseLastfmDate(album.releasedate);
+          let source = 'releasedate';
+
+          if (!parsed) {
+            parsed = parseLastfmDate(album.wiki && album.wiki.published);
+            source = 'wiki.published';
           }
-        } else {
-          console.log('У этого альбома в Last.fm нет информации о дате выхода (отсутствует wiki).');
+
+          if (parsed) {
+            dateInput.value = parsed;
+            console.log(`Дата релиза получена из Last.fm (${source}):`, parsed);
+          } else {
+            console.log('У этого альбома в Last.fm нет данных о дате выхода (ни releasedate, ни wiki.published).');
+          }
+        } catch (e) {
+          console.error('Ошибка при обработке даты:', e);
         }
       }
       // 4. Треклист
