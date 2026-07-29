@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonora — Треки лета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #121014;
+    --surface-1: #1b181d;
+    --surface-2: #242026;
+    --border: rgba(242,237,230,0.09);
+    --border-strong: rgba(242,237,230,0.16);
+    --text: #f2ede6;
+    --text-secondary: rgba(242,237,230,0.62);
+    --text-muted: rgba(242,237,230,0.38);
+    --accent: #e8a33d;
+    --radius: 14px;
+    --radius-sm: 8px;
+
+    /* Тепловая шкала чарта: от раскалённого золота (#1) до
+       сумеречной сливы (последний трек подборки). Восемь узлов —
+       по числу треков в макете; в реальной вёрстке считается
+       интерполяцией по количеству элементов. */
+    --heat-1: #f2c14e;
+    --heat-2: #eba93f;
+    --heat-3: #e08c3a;
+    --heat-4: #cf6f42;
+    --heat-5: #bd5c52;
+    --heat-6: #a8546c;
+    --heat-7: #8a4d82;
+    --heat-8: #6b5a9e;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 32px;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:72px 0 56px;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:'';
+    position:absolute; inset:-20% -10% auto -10%; height:420px;
+    background:radial-gradient(ellipse at 30% 20%, rgba(242,193,78,0.16), transparent 60%),
+               radial-gradient(ellipse at 80% 10%, rgba(107,90,158,0.14), transparent 55%);
+    pointer-events:none;
+  }
+  .eyebrow{
+    position:relative;
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--heat-1); margin:0 0 14px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:''; width:22px; height:1px;
+    background:linear-gradient(90deg, var(--heat-1), transparent);
+  }
+  .hero h1{
+    position:relative;
+    font-family:'Fraunces',serif; font-style:italic; font-weight:500;
+    font-size:clamp(40px,6vw,64px); line-height:1.05; margin:0 0 18px;
+    background:linear-gradient(100deg, var(--heat-1) 0%, var(--text) 45%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p{
+    position:relative;
+    max-width:480px; font-size:15px; color:var(--text-secondary); line-height:1.65; margin:0;
+  }
+  .hero-stat{
+    position:relative;
+    margin-top:28px; display:flex; gap:28px; flex-wrap:wrap;
+  }
+  .hero-stat div{font-family:'JetBrains Mono',monospace;}
+  .hero-stat .num{font-size:22px; color:var(--text); font-weight:500;}
+  .hero-stat .label{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+
+  /* ---------- Heat legend ---------- */
+  .legend{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 0; margin-bottom:6px;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);
+    text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .legend .rail-mini{
+    flex:1; height:2px; margin:0 16px;
+    background:linear-gradient(90deg,
+      var(--heat-1), var(--heat-2), var(--heat-3), var(--heat-4),
+      var(--heat-5), var(--heat-6), var(--heat-7), var(--heat-8));
+    border-radius:2px;
+  }
+
+  /* ---------- Chart ---------- */
+  .chart{ position:relative; padding-left:26px; margin-bottom:64px; }
+  .heat-rail{
+    position:absolute; left:0; top:6px; bottom:6px; width:3px;
+    border-radius:3px;
+    background:linear-gradient(180deg,
+      var(--heat-1), var(--heat-2), var(--heat-3), var(--heat-4),
+      var(--heat-5), var(--heat-6), var(--heat-7), var(--heat-8));
+  }
+
+  .track-row{
+    position:relative;
+    display:grid;
+    grid-template-columns:64px 56px 1fr auto;
+    align-items:center;
+    gap:18px;
+    padding:18px 16px 18px 22px;
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .track-row:hover{ background:var(--surface-1); transform:translateX(2px); }
+  .track-row:not(:last-child){ border-bottom:1px solid var(--border); }
+  .track-row:hover:not(:last-child){ border-bottom-color:transparent; }
+
+  .rank-num{
+    font-family:'JetBrains Mono',monospace; font-weight:700;
+    font-size:34px; line-height:1; text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .cover{
+    width:56px; height:56px; border-radius:6px; flex-shrink:0;
+    background-size:cover; background-position:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.35);
+  }
+
+  .track-info .title{ font-size:15px; font-weight:500; margin:0 0 4px; }
+  .track-info .artist{ font-size:13px; color:var(--text-secondary); margin:0; }
+  .track-info .heat-label{
+    display:inline-block; margin-top:7px;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.03em;
+    text-transform:uppercase; color:var(--text-muted);
+  }
+
+  .track-genre{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);
+    text-align:right; white-space:nowrap;
+  }
+
+  footer{
+    border-top:1px solid var(--border); padding:24px 0 40px;
+    font-size:12px; color:var(--text-muted); text-align:center;
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:0 18px;}
+    .track-row{ grid-template-columns:40px 44px 1fr; }
+    .track-genre{ display:none; }
+    .rank-num{ font-size:24px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .track-row{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">Июнь — август · чарт сезона</p>
+    <h1>Треки лета</h1>
+    <p>Подборка, которая звучала чаще всего на пляжах, балконах и в машинах этим летом. Порядок — по частоте прослушиваний за сезон.</p>
+    <div class="hero-stat">
+      <div><div class="num">24</div><div class="label">трека в чарте</div></div>
+      <div><div class="num">#1</div><div class="label">Kislorod</div></div>
+      <div><div class="num">92 дня</div><div class="label">длительность сезона</div></div>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span>Горячее</span>
+    <span class="rail-mini" aria-hidden="true"></span>
+    <span>Прохладнее</span>
+  </div>
+
+  <section class="chart">
+    <div class="heat-rail" aria-hidden="true"></div>
+
+    <article class="track-row" tabindex="0" role="button" style="--rank-color: var(--heat-1)">
+      <span class="rank-num" style="color:var(--heat-1)">01</span>
+      <div class="cover" style="background:linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%)"></div>
+      <div class="track-info">
+        <p class="title">Полуденный зной</p>
+        <p class="artist">Kislorod</p>
+        <span class="heat-label">Хит пляжного сезона</span>
+      </div>
+      <span class="track-genre">Synth-pop</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-2)">02</span>
+      <div class="cover" style="background:linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%)"></div>
+      <div class="track-info">
+        <p class="title">Растворяясь в июле</p>
+        <p class="artist">Prizrak Leta</p>
+        <span class="heat-label">Саундтрек к закату</span>
+      </div>
+      <span class="track-genre">Dream pop</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-3)">03</span>
+      <div class="cover" style="background:linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%)"></div>
+      <div class="track-info">
+        <p class="title">Асфальт плавится</p>
+        <p class="artist">Yuzhny Veter</p>
+        <span class="heat-label">Для дороги на юг</span>
+      </div>
+      <span class="track-genre">Synthwave</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-4)">04</span>
+      <div class="cover" style="background:linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%)"></div>
+      <div class="track-info">
+        <p class="title">Кокос и никотин</p>
+        <p class="artist">Melnitsa Yug</p>
+        <span class="heat-label">Ночной пляжный бар</span>
+      </div>
+      <span class="track-genre">Indie</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-5)">05</span>
+      <div class="cover" style="background:linear-gradient(150deg,#b5566f 0%,#732f42 100%)"></div>
+      <div class="track-info">
+        <p class="title">Тень от вентилятора</p>
+        <p class="artist">Oksana Vetrova</p>
+        <span class="heat-label">Полуденная сиеста</span>
+      </div>
+      <span class="track-genre">Lo-fi</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-6)">06</span>
+      <div class="cover" style="background:linear-gradient(150deg,#b5566f 0%,#732f42 100%)"></div>
+      <div class="track-info">
+        <p class="title">Терраса</p>
+        <p class="artist">Dolgoe Leto</p>
+        <span class="heat-label">Вечерний плейлист</span>
+      </div>
+      <span class="track-genre">Chillwave</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-7)">07</span>
+      <div class="cover" style="background:linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%)"></div>
+      <div class="track-info">
+        <p class="title">Августовский шум</p>
+        <p class="artist">Solnechny Bereg</p>
+        <span class="heat-label">Финал сезона</span>
+      </div>
+      <span class="track-genre">Ambient</span>
+    </article>
+
+    <article class="track-row" tabindex="0" role="button">
+      <span class="rank-num" style="color:var(--heat-8)">08</span>
+      <div class="cover" style="background:linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%)"></div>
+      <div class="track-info">
+        <p class="title">Последний паром</p>
+        <p class="artist">Nochnoy Priboy</p>
+        <span class="heat-label">Прощание с летом</span>
+      </div>
+      <span class="track-genre">Downtempo</span>
+    </article>
+
+  </section>
+
+  <footer>Чарт обновляется по данным прослушиваний за сезон — тепловая шкала слева отражает место в рейтинге</footer>
+
+</div>
+
+</body>
+</html>
