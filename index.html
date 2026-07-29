@@ -161,7 +161,7 @@
 
   /* ---------- New releases grid ---------- */
   .releases{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:18px;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:18px;
     margin-bottom:56px;
   }
   .release-card{
@@ -307,6 +307,9 @@
   }
 
   /* ---------- Responsive ---------- */
+  @media (max-width:1080px){
+    .releases{grid-template-columns:repeat(3,1fr);}
+  }
   @media (max-width:920px){
     .releases{grid-template-columns:repeat(2,1fr);}
     .split{grid-template-columns:1fr; gap:36px;}
@@ -358,7 +361,7 @@
 
   <section id="releases">
     <div class="section-head">
-      <h2>Последние новинки</h2>
+      <h2>Добавленные релизы</h2>
       <a href="releases.html" id="all-releases-link">Все новинки →</a>
     </div>
     <div class="releases" id="releases-grid">
@@ -594,12 +597,16 @@ document.addEventListener('keydown', (e) => {
 // same release_cards view so every card has tracks + review
 // + rating available for the modal without extra round trips.
 // ---------------------------------------------------------
-async function fetchNewReleases(limit = 4){
+
+// Последние ДОБАВЛЕННЫЕ релизы — сортировка по created_at (моменту
+// добавления в базу), а не по release_date (дате самого релиза).
+// Это две разные вещи: свежедобавленный в каталог альбом может быть
+// и старым релизом, и наоборот.
+async function fetchLatestAdded(limit = 5){
   const { data, error } = await supabase
     .from(RELEASE_CARDS_VIEW)
     .select('*')
-    .eq('is_new', true)
-    .order('release_date', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
   return data;
@@ -638,7 +645,7 @@ async function fetchSummerPicks(){
 }
 
 async function searchReleases(query){
-  if (!query.trim()) return fetchNewReleases(8);
+  if (!query.trim()) return fetchLatestAdded(8);
   const { data, error } = await supabase
     .from(RELEASE_CARDS_VIEW)
     .select('*')
@@ -653,17 +660,17 @@ async function searchReleases(query){
 // ---------------------------------------------------------
 async function renderReleaseGrid(){
   const grid = document.getElementById('releases-grid');
-  grid.innerHTML = Array.from({length:4}).map(() =>
+  grid.innerHTML = Array.from({length:5}).map(() =>
     `<div class="skeleton" style="aspect-ratio:1/1.05"></div>`).join('');
   try {
-    const releases = await fetchNewReleases(4);
+    const releases = await fetchLatestAdded(5);
     releases.forEach(cacheRelease);
     grid.innerHTML = releases.length
       ? releases.map(releaseCardHTML).join('')
-      : `<p class="state-msg">Пока нет новинок.</p>`;
+      : `<p class="state-msg">Пока нет релизов.</p>`;
   } catch (err){
     console.error(err);
-    grid.innerHTML = `<p class="state-msg error">Не удалось загрузить новинки. Проверьте подключение к Supabase.</p>`;
+    grid.innerHTML = `<p class="state-msg error">Не удалось загрузить релизы. Проверьте подключение к Supabase.</p>`;
   }
 }
 
@@ -724,13 +731,13 @@ document.getElementById('search-input').addEventListener('input', (e) => {
   const query = e.target.value;
   searchDebounce = setTimeout(async () => {
     const grid = document.getElementById('releases-grid');
-    grid.innerHTML = Array.from({length:4}).map(() =>
+    grid.innerHTML = Array.from({length:5}).map(() =>
       `<div class="skeleton" style="aspect-ratio:1/1.05"></div>`).join('');
     try {
       const results = await searchReleases(query);
       results.forEach(cacheRelease);
       document.querySelector('#releases .section-head h2').textContent =
-        query.trim() ? `Результаты: «${query}»` : 'Последние новинки';
+        query.trim() ? `Результаты: «${query}»` : 'Добавленные релизы';
       grid.innerHTML = results.length
         ? results.map(releaseCardHTML).join('')
         : `<p class="state-msg">Ничего не найдено.</p>`;
