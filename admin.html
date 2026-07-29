@@ -220,7 +220,58 @@
     });
   }
   
-// Функция автоматического поиска через Last.fm API
+// ---------------------------------------------------------
+  // Фолбэк для даты релиза: MusicBrainz.
+  // Используется, только если Last.fm не смог отдать дату сам —
+  // например, когда кириллическая и латинская карточки одного
+  // артиста на Last.fm разъехались на разные, не связанные между
+  // собой страницы, и найденная страница просто без даты.
+  // MusicBrainz хранит явные alias'ы (кириллица <-> транслит),
+  // поэтому находит нужного артиста надёжнее, чем текстовый поиск Last.fm.
+  // ---------------------------------------------------------
+  async function fetchMusicBrainzReleaseDate(artist, title) {
+    try {
+      const escapeQuery = (s) => s.replace(/"/g, '\\"');
+      const query = `artist:"${escapeQuery(artist)}" AND releasegroup:"${escapeQuery(title)}"`;
+      const url = `https://musicbrainz.org/ws/2/release-group/?query=${encodeURIComponent(query)}&fmt=json&limit=5`;
+
+      // Примечание: браузер не позволяет фронтенду задать заголовок
+      // User-Agent вручную (это запрещённый для fetch заголовок),
+      // поэтому просьбу MusicBrainz идентифицировать приложение
+      // технически выполнить нельзя. Для редких ручных нажатий кнопки
+      // в админке это укладывается в их политику вежливого использования.
+      const res = await fetch(url);
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const groups = data['release-groups'] || [];
+      if (!groups.length) return null;
+
+      // MusicBrainz уже сортирует результаты по релевантности (score).
+      // Берём первый результат, у которого действительно есть дата.
+      const match = groups.find(g => g['first-release-date']);
+      if (!match) return null;
+
+      return normalizeMusicBrainzDate(match['first-release-date']);
+    } catch (e) {
+      console.error('Ошибка запроса к MusicBrainz:', e);
+      return null;
+    }
+  }
+
+  // MusicBrainz может отдать неполную дату: "2019", "2019-12" или "2019-12-24".
+  // <input type="date"> требует полный YYYY-MM-DD, поэтому недостающие
+  // части дополняем "01", но явно помечаем это как приблизительную дату.
+  function normalizeMusicBrainzDate(raw) {
+    const parts = String(raw).split('-');
+    const approximate = parts.length < 3;
+    const yyyy = parts[0];
+    const mm = (parts[1] || '01').padStart(2, '0');
+    const dd = (parts[2] || '01').padStart(2, '0');
+    return { value: `${yyyy}-${mm}-${dd}`, approximate };
+  }
+
+  // Функция автоматического поиска через Last.fm API
   async function autoFetchAlbumData() {
     const artist = document.getElementById('f_artist').value.trim();
     const title = document.getElementById('f_title').value.trim();
@@ -309,18 +360,32 @@
       if (!dateInput.value) {
         try {
           let parsed = parseLastfmDate(album.releasedate);
-          let source = 'releasedate';
+          let source = 'Last.fm releasedate';
 
           if (!parsed) {
             parsed = parseLastfmDate(album.wiki && album.wiki.published);
-            source = 'wiki.published';
+            source = 'Last.fm wiki.published';
           }
 
           if (parsed) {
             dateInput.value = parsed;
-            console.log(`Дата релиза получена из Last.fm (${source}):`, parsed);
+            console.log(`Дата релиза получена из ${source}:`, parsed);
           } else {
-            console.log('У этого альбома в Last.fm нет данных о дате выхода (ни releasedate, ни wiki.published).');
+            // Last.fm не дал ничего — частая причина: у артиста разъехались
+            // кириллическая и латинская карточки на Last.fm, и найденная
+            // страница просто не содержит даты. MusicBrainz хранит явные
+            // alias'ы (кириллица <-> транслит) и находит артиста надёжнее.
+            const mb = await fetchMusicBrainzReleaseDate(artist, title);
+            if (mb) {
+              dateInput.value = mb.value;
+              console.log(
+                `Дата релиза получена из MusicBrainz (фолбэк)` +
+                `${mb.approximate ? ', приблизительная — известен только год/месяц' : ''}:`,
+                mb.value
+              );
+            } else {
+              console.log('Дату релиза не удалось найти ни в Last.fm, ни в MusicBrainz — заполните вручную.');
+            }
           }
         } catch (e) {
           console.error('Ошибка при обработке даты:', e);
