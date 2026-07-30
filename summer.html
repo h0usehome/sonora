@@ -312,27 +312,6 @@ function heatColor(t){
 const releaseCache = new Map();
 function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
 
-function formatDuration(seconds){
-  if (!seconds && seconds !== 0) return '';
-  const m = Math.floor(seconds / 60);
-  const s = String(seconds % 60).padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-function starsHTML(rating, size = ''){
-  if (rating == null) return '<span class="rating-num">Без оценки</span>';
-  const starSvg = (fillPct) => `
-    <span class="star">
-      <svg class="empty" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-      <svg class="fill" viewBox="0 0 24 24" style="--fill:${fillPct}%"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-    </span>`;
-  let out = `<span class="stars ${size}">`;
-  for (let i = 0; i < 10; i++){
-    out += starSvg(Math.max(0, Math.min(100, (rating - i) * 100)));
-  }
-  out += `</span><span class="rating-num">${rating.toFixed(1)}</span>`;
-  return out;
-}
 
 function trackRowHTML(release, index, total){
   const color = heatColor(total > 1 ? index / (total - 1) : 0);
