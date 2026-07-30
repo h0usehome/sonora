@@ -188,6 +188,13 @@
     letter-spacing:0.04em; background:rgba(18,16,20,0.55); backdrop-filter:blur(4px);
     padding:3px 8px; border-radius:999px; color:rgba(242,237,230,0.8);
   }
+  .release-type-badge{
+    position:absolute; top:10px; right:10px; z-index:1;
+    font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:0.04em; background:rgba(18,16,20,0.55); backdrop-filter:blur(4px);
+    padding:3px 8px; border-radius:999px; color:rgba(242,237,230,0.8);
+  }
+  .release-type-badge--single{color:var(--accent);}
 
   /* ---------- Two-column: ratings + reviews ---------- */
   .split{display:grid; grid-template-columns:1fr 1fr; gap:48px;}
@@ -330,6 +337,16 @@
     font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0;
   }
   .all-releases-toolbar{display:flex; align-items:center; gap:16px;}
+  .type-filter{
+    display:flex; gap:4px; background:var(--surface-1); border:1px solid var(--border);
+    border-radius:999px; padding:3px;
+  }
+  .type-filter-btn{
+    background:none; color:var(--text-secondary); font-size:12.5px;
+    padding:6px 14px; border-radius:999px; transition:background 0.2s ease, color 0.2s ease;
+  }
+  .type-filter-btn:hover{color:var(--text);}
+  .type-filter-btn.active{background:var(--accent); color:#121014; font-weight:500;}
   .releases-count{
     font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted);
   }
@@ -375,6 +392,11 @@
     <h1>Все релизы</h1>
     <div class="all-releases-toolbar">
       <span class="releases-count" id="releases-count"></span>
+      <div class="type-filter" id="type-filter" role="tablist" aria-label="Тип релиза">
+        <button type="button" class="type-filter-btn active" data-type="all">Все</button>
+        <button type="button" class="type-filter-btn" data-type="album">Альбомы</button>
+        <button type="button" class="type-filter-btn" data-type="single">Синглы</button>
+      </div>
       <select class="sort-select" id="sort-select" aria-label="Сортировка">
         <option value="date_desc">Сначала новые</option>
         <option value="date_asc">Сначала старые</option>
@@ -469,12 +491,22 @@ function starsHTML(rating, size = ''){
   return out;
 }
 
+// Тип релиза определяется по числу треков: 1 трек — сингл, 2 и более — альбом.
+function getReleaseType(release){
+  return (release.tracks || []).length <= 1 ? 'single' : 'album';
+}
+function releaseTypeLabel(type){
+  return type === 'single' ? 'Сингл' : 'Альбом';
+}
+
 function releaseCardHTML(release){
+  const type = getReleaseType(release);
   return `
     <article class="release-card" data-id="${release.id}" tabindex="0" role="button"
              aria-label="${release.title} — ${release.artist}">
       <div class="cover" style="${coverStyle(release)}"></div>
       <span class="release-tag">${release.genre}</span>
+      <span class="release-type-badge release-type-badge--${type}">${releaseTypeLabel(type)}</span>
       <div class="release-meta">
         <p class="title">${release.title}</p>
         <p class="artist">${release.artist}</p>
@@ -596,12 +628,17 @@ function currentQuery(){
   return document.getElementById('search-input').value.trim().toLowerCase();
 }
 
+let currentTypeFilter = 'all';
+
 function applyFilterAndSort(){
   const query = currentQuery();
-  const filtered = query
+  let filtered = query
     ? allReleases.filter(r =>
         r.title.toLowerCase().includes(query) || r.artist.toLowerCase().includes(query))
     : allReleases;
+  if (currentTypeFilter !== 'all'){
+    filtered = filtered.filter(r => getReleaseType(r) === currentTypeFilter);
+  }
   renderGrid(sortReleases(filtered, document.getElementById('sort-select').value));
 }
 
@@ -620,6 +657,14 @@ async function boot(){
 }
 
 document.getElementById('sort-select').addEventListener('change', applyFilterAndSort);
+
+document.getElementById('type-filter').addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-filter-btn');
+  if (!btn) return;
+  currentTypeFilter = btn.dataset.type;
+  document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+  applyFilterAndSort();
+});
 
 // Поиск фильтрует уже загруженный полный список на клиенте —
 // отдельный запрос к Supabase на каждое нажатие клавиши не нужен.
