@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
+<link rel="stylesheet" href="modal.css">
+  <style>
   :root{
     --bg: #121014;
     --surface-1: #1b181d;
@@ -446,7 +447,13 @@
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// 1. Подключаем наш новый модуль
+import { initModal, openModal, coverStyle, formatDuration, starsHTML } from './modal.js';
 
+// 2. Инициализируем закрытие по клику/Escape
+initModal();
+
+  
 // Тот же проект Supabase, что и на главной странице.
 const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
@@ -454,26 +461,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const RELEASE_CARDS_VIEW = 'release_cards';
 
-const THEME_GRADIENT = {
-  teal:  'var(--teal)',  pink:  'var(--pink)',  amber: 'var(--amber)',
-  green: 'var(--green)', plum:  'var(--plum)',  coral: 'var(--coral)',
-};
 
 // Кэш всех загруженных релизов — модалка открывается без повторных запросов.
 const releaseCache = new Map();
 function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
-
-function coverStyle(release){
-  if (release.cover_url) return `background-image:url('${release.cover_url}')`;
-  return `background:${THEME_GRADIENT[release.cover_theme] || THEME_GRADIENT.teal}`;
-}
-
-function formatDuration(seconds){
-  if (!seconds && seconds !== 0) return '';
-  const m = Math.floor(seconds / 60);
-  const s = String(seconds % 60).padStart(2, '0');
-  return `${m}:${s}`;
-}
 
 function starsHTML(rating, size = ''){
   if (rating == null) return '<span class="rating-num">Без оценки</span>';
@@ -513,65 +504,6 @@ function releaseCardHTML(release){
       </div>
     </article>`;
 }
-
-// ---------------------------------------------------------
-// Модалка — идентична главной странице, читает из общего кэша.
-// ---------------------------------------------------------
-const modalOverlay = document.getElementById('modal-overlay');
-const modalCover = document.getElementById('modal-cover');
-
-function openModal(release){
-  modalCover.style.cssText = coverStyle(release);
-  document.getElementById('modal-genre').textContent = release.genre;
-  document.getElementById('modal-title').textContent = release.title;
-  document.getElementById('modal-artist').textContent = release.artist;
-  document.getElementById('modal-rating').innerHTML = starsHTML(release.rating, 'lg');
-
-  const tracks = release.tracks || [];
-  const tracksSection = document.getElementById('modal-tracks-section');
-  if (tracks.length){
-    tracksSection.style.display = '';
-    document.getElementById('modal-tracks').innerHTML = tracks.map(t => `
-      <li>
-        <span class="num">${String(t.number).padStart(2,'0')}</span>
-        <span class="t-title">${t.title}</span>
-        <span class="dur">${formatDuration(t.duration)}</span>
-      </li>`).join('');
-  } else {
-    tracksSection.style.display = 'none';
-  }
-
-  const reviewSection = document.getElementById('modal-review-section');
-  if (release.review){
-    reviewSection.style.display = '';
-    document.getElementById('modal-review').textContent = release.review;
-  } else {
-    reviewSection.style.display = 'none';
-  }
-
-  modalOverlay.classList.add('open');
-}
-
-function closeModal(){ modalOverlay.classList.remove('open'); }
-
-document.getElementById('modal-close').addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-id]');
-  if (!el) return;
-  const release = releaseCache.get(el.dataset.id);
-  if (release) openModal(release);
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  const el = e.target.closest?.('[data-id]');
-  if (!el) return;
-  e.preventDefault();
-  const release = releaseCache.get(el.dataset.id);
-  if (release) openModal(release);
-});
 
 // ---------------------------------------------------------
 // Загрузка ВСЕХ релизов одним запросом. Сортировка и поиск
