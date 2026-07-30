@@ -384,6 +384,14 @@
     }
   }
   
+  // Тип релиза определяется по числу треков: 1 трек — сингл, 2 и более — альбом.
+  function getReleaseType(release){
+    return (release.tracks || []).length <= 1 ? 'single' : 'album';
+  }
+  function releaseTypeLabel(type){
+    return type === 'single' ? 'Сингл' : 'Альбом';
+  }
+
   // 1. Загрузка списка релизов из базы
 async function loadReleases() {
   const list = document.getElementById('releases-list');
@@ -408,9 +416,11 @@ async function loadReleases() {
   data.forEach(release => {
     const div = document.createElement('div');
     div.style = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);';
+    const type = getReleaseType(release);
     div.innerHTML = `
       <div>
         <strong style="color: var(--accent);">${release.artist || 'Артист'}</strong> — ${release.title}
+        <span style="margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: ${type === 'single' ? 'var(--accent)' : 'var(--text-muted)'};">${releaseTypeLabel(type)}</span>
       </div>
       <div style="display: flex; gap: 10px;">
         <button type="button" onclick="startEdit('${release.release_id}')" style="padding: 5px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">Изменить</button>
