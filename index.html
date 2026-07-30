@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
+<link rel="stylesheet" href="modal.css">
+  <style>
   :root{
     --bg: #121014;
     --surface-1: #1b181d;
@@ -435,6 +436,19 @@
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// 1. Подключаем наш новый модуль
+import { initModal, openModal, coverStyle, formatDuration, starsHTML } from './modal.js';
+
+// 2. Инициализируем закрытие по клику/Escape
+initModal();
+
+// --- ВАЖНО: Удалите из файла старые реализации функций ---
+// - THEME_GRADIENT
+// - coverStyle()
+// - formatDuration()
+// - starsHTML()
+// - openModal() / closeModal()
+// - обработчики клика по #modal-close, Escape и т.д.
 
 // Anon key is safe to expose client-side as long as RLS policies (schema.sql) only allow public SELECT
 const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
@@ -447,10 +461,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // trip per section instead of N+1 queries.
 const RELEASE_CARDS_VIEW = 'release_cards';
 
-const THEME_GRADIENT = {
-  teal:  'var(--teal)',  pink:  'var(--pink)',  amber: 'var(--amber)',
-  green: 'var(--green)', plum:  'var(--plum)',  coral: 'var(--coral)',
-};
 
 // In-memory cache of every release fetched so far, keyed by id,
 // so the detail modal never needs a second round trip.
@@ -458,34 +468,6 @@ const releaseCache = new Map();
 
 function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
 
-function coverStyle(release){
-  if (release.cover_url) return `background-image:url('${release.cover_url}')`;
-  return `background:${THEME_GRADIENT[release.cover_theme] || THEME_GRADIENT.teal}`;
-}
-
-function formatDuration(seconds){
-  if (!seconds && seconds !== 0) return '';
-  const m = Math.floor(seconds / 60);
-  const s = String(seconds % 60).padStart(2, '0');
-  return `${m}:${s}`;
-}
-
-// 10 stars representing a 0-10 rating, with partial fill for decimals (e.g. 8.4 -> 8 full + 1 at 40%)
-function starsHTML(rating, size = ''){
-  if (rating == null) return '<span class="rating-num">Без оценки</span>';
-  const starSvg = (fillPct, key) => `
-    <span class="star">
-      <svg class="empty" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-      <svg class="fill" viewBox="0 0 24 24" style="--fill:${fillPct}%"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-    </span>`;
-  let out = `<span class="stars ${size}">`;
-  for (let i = 0; i < 10; i++){
-    const fill = Math.max(0, Math.min(100, (rating - i) * 100));
-    out += starSvg(fill, i);
-  }
-  out += `</span><span class="rating-num">${rating.toFixed(1)}</span>`;
-  return out;
-}
 
 // Used in the "new releases" grid; tracklist + review + full rating open in the shared modal
 function releaseCardHTML(release){
@@ -524,64 +506,6 @@ function reviewRowHTML(release){
     </div>`;
 }
 
-// Shows the full tracklist and review for one release, from data already cached
-const modalOverlay = document.getElementById('modal-overlay');
-const modalCover = document.getElementById('modal-cover');
-
-function openModal(release){
-  modalCover.style.cssText = coverStyle(release);
-  document.getElementById('modal-genre').textContent = release.genre;
-  document.getElementById('modal-title').textContent = release.title;
-  document.getElementById('modal-artist').textContent = release.artist;
-  document.getElementById('modal-rating').innerHTML = starsHTML(release.rating, 'lg');
-
-  const tracks = release.tracks || [];
-  const tracksSection = document.getElementById('modal-tracks-section');
-  if (tracks.length){
-    tracksSection.style.display = '';
-    document.getElementById('modal-tracks').innerHTML = tracks.map(t => `
-      <li>
-        <span class="num">${String(t.number).padStart(2,'0')}</span>
-        <span class="t-title">${t.title}</span>
-        <span class="dur">${formatDuration(t.duration)}</span>
-      </li>`).join('');
-  } else {
-    tracksSection.style.display = 'none';
-  }
-
-  const reviewSection = document.getElementById('modal-review-section');
-  if (release.review){
-    reviewSection.style.display = '';
-    document.getElementById('modal-review').textContent = release.review;
-  } else {
-    reviewSection.style.display = 'none';
-  }
-
-  modalOverlay.classList.add('open');
-}
-
-function closeModal(){ modalOverlay.classList.remove('open'); }
-
-document.getElementById('modal-close').addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-// Event delegation: any element with data-id, anywhere in the page,
-// opens that release's modal from the cache.
-document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-id]');
-  if (!el) return;
-  const release = releaseCache.get(el.dataset.id);
-  if (release) openModal(release);
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  const el = e.target.closest?.('[data-id]');
-  if (!el) return;
-  e.preventDefault();
-  const release = releaseCache.get(el.dataset.id);
-  if (release) openModal(release);
-});
 
 // Sorted by created_at (when added to the catalog), not release_date (when the album came out)
 async function fetchLatestAdded(limit = 5){
