@@ -472,21 +472,6 @@ const RELEASE_CARDS_VIEW = 'release_cards';
 const releaseCache = new Map();
 function cacheRelease(r){ releaseCache.set(r.id, r); return r; }
 
-function starsHTML(rating, size = ''){
-  if (rating == null) return '<span class="rating-num">Без оценки</span>';
-  const starSvg = (fillPct) => `
-    <span class="star">
-      <svg class="empty" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-      <svg class="fill" viewBox="0 0 24 24" style="--fill:${fillPct}%"><path d="M12 2.5l2.9 6.6 7.2.7-5.4 4.9 1.6 7.1L12 18.1l-6.3 3.7 1.6-7.1-5.4-4.9 7.2-.7z"/></svg>
-    </span>`;
-  let out = `<span class="stars ${size}">`;
-  for (let i = 0; i < 10; i++){
-    const fill = Math.max(0, Math.min(100, (rating - i) * 100));
-    out += starSvg(fill);
-  }
-  out += `</span><span class="rating-num">${rating.toFixed(1)}</span>`;
-  return out;
-}
 
 // Тип релиза определяется по числу треков: 1 трек — сингл, 2 и более — альбом.
 function getReleaseType(release){
