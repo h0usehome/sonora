@@ -99,11 +99,18 @@
           <input type="text" id="f_genre" required placeholder="Например: Synthwave">
         </div>
         <div class="form-group">
+          <label>Тип релиза</label>
+          <select id="f_type">
+            <option value="album">Альбом</option>
+            <option value="single">Сингл</option>
+            <option value="ep">EP (Мини-альбом)</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Дата выхода</label>
           <input type="date" id="f_date">
         </div>
-      </div>
-      <label class="switch-label">
+      </div>      <label class="switch-label">
         <input type="checkbox" id="f_is_new" checked>
         Показывать в разделе «Последние новинки»
       </label>
@@ -473,6 +480,7 @@ async function startEdit(id) {
   document.getElementById('f_cover_url').value = release.cover_url || ''; 
   document.getElementById('f_genre').value = release.genre || '';
   document.getElementById('f_date').value = release.release_date || '';
+  document.getElementById('f_type').value = release.release_type || 'album';
 
   // Очищаем текущие треки в форме и заполняем старыми
   tracksContainer.innerHTML = '';
@@ -535,6 +543,7 @@ loadReleases();
           .update({
             title: document.getElementById('f_title').value.trim(),
             genre: document.getElementById('f_genre').value.trim(),
+            release_type: document.getElementById('f_type').value,
             cover_url: document.getElementById('f_cover_url').value.trim() || null,
             cover_theme: document.getElementById('f_theme').value,
             rating: parseFloat(document.getElementById('f_rating').value) || null,
@@ -575,6 +584,7 @@ loadReleases();
           p_artist_name: document.getElementById('f_artist').value.trim(),
           p_title: document.getElementById('f_title').value.trim(),
           p_genre: document.getElementById('f_genre').value.trim(),
+          p_release_type: document.getElementById('f_type').value,
           p_cover_url: document.getElementById('f_cover_url').value.trim() || null,
           p_cover_theme: document.getElementById('f_theme').value,
           p_rating: parseFloat(document.getElementById('f_rating').value) || null,
