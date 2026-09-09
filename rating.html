@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='80' font-family='Georgia,serif' font-weight='bold' fill='%2334D399' text-anchor='middle'>S</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonora — Рейтинг</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="modal.css">
+<style>
+  :root {
+    --bg: #121014;
+    --surface-1: #1b181d;
+    --surface-2: #242026;
+    --border: rgba(242,237,230,0.09);
+    --border-strong: rgba(242,237,230,0.16);
+    --text: #f2ede6;
+    --text-secondary: rgba(242,237,230,0.62);
+    --text-muted: rgba(242,237,230,0.38);
+    --accent: #e8a33d;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button, select { font-family: inherit; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+
+  /* ---------- Header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(18,16,20,0.86); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0;
+  }
+  .logo { display: flex; align-items: baseline; gap: 10px; }
+  .logo-mark {
+    font-family: 'Fraunces', serif; font-style: italic; font-weight: 500;
+    font-size: 23px; letter-spacing: 0.01em; color: var(--accent);
+  }
+  nav { display: flex; gap: 28px; }
+  nav a {
+    font-size: 13.5px; color: var(--text-secondary);
+    padding: 6px 0; position: relative; transition: color 0.2s ease;
+  }
+  nav a:hover { color: var(--text); }
+  nav a.active { color: var(--accent); font-weight: 500; }
+  nav a.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -19px;
+    height: 2px; background: var(--accent);
+  }
+
+  /* ---------- Filters ---------- */
+  main { padding: 40px 0 80px; }
+  .page-title {
+    font-family: 'Fraunces', serif; font-size: 32px; font-weight: 500;
+    margin: 0 0 24px;
+  }
+  
+  .filters-bar {
+    display: flex; gap: 12px; align-items: center; margin-bottom: 40px;
+    background: var(--surface-1); padding: 16px 20px;
+    border-radius: var(--radius); border: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .filter-select {
+    background: var(--surface-2); border: 1px solid var(--border-strong);
+    color: var(--text); padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; outline: none; transition: 0.2s;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+  .btn-clear {
+    background: transparent; border: 1px solid var(--border-strong);
+    color: var(--text-muted); padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; transition: 0.2s; margin-left: auto;
+  }
+  .btn-clear:hover { color: var(--text); border-color: var(--text-muted); }
+
+  /* ---------- Two Columns Layout ---------- */
+  .rating-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+  }
+  .column-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    text-transform: uppercase; color: var(--text-muted);
+    letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+    padding-bottom: 12px; margin-bottom: 0;
+  }
+
+  /* ---------- List Styles ---------- */
+  .rank-list { list-style: none; margin: 0; padding: 0; }
+  .rank-list li {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.2s;
+  }
+  .rank-list li:hover { background: rgba(255,255,255,0.02); }
+  .rank-list li:last-child { border-bottom: none; }
+  
+  .rank-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--text-muted); width: 24px; flex-shrink: 0; text-align: right;
+  }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-info .title { font-size: 14px; font-weight: 500; margin: 0; color: var(--text); }
+  .rank-info .artist { font-size: 12.5px; color: var(--text-secondary); margin: 3px 0 0; }
+  .rank-score {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--accent); font-weight: 600; background: var(--accent-soft);
+    padding: 4px 8px; border-radius: 6px;
+  }
+  
+  .empty-state { font-size: 14px; color: var(--text-muted); padding: 20px 0; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 800px) {
+    .rating-grid { grid-template-columns: 1fr; gap: 40px; }
+    .filters-bar { flex-direction: column; align-items: stretch; }
+    .btn-clear { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="logo">
+      <span class="logo-mark">Sonora</span>
+    </div>
+    <nav aria-label="Разделы сайта">
+      <a href="index.html">Лента релизов</a>
+      <a href="rating.html" class="active">Рейтинг</a>
+      <a href="summer.html">Треки лета</a>
+      <a href="releases.html">Каталог</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="page-title">Зал славы</h1>
+  
+  <div class="filters-bar">
+    <select id="filter-year" class="filter-select">
+      <option value="all">Все годы</option>
+      <!-- Года генерируются из базы -->
+    </select>
+    
+    <select id="filter-month" class="filter-select">
+      <option value="all">Все месяцы</option>
+      <option value="01">Январь</option>
+      <option value="02">Февраль</option>
+      <option value="03">Март</option>
+      <option value="04">Апрель</option>
+      <option value="05">Май</option>
+      <option value="06">Июнь</option>
+      <option value="07">Июль</option>
+      <option value="08">Август</option>
+      <option value="09">Сентябрь</option>
+      <option value="10">Октябрь</option>
+      <option value="11">Ноябрь</option>
+      <option value="12">Декабрь</option>
+    </select>
+
+    <button id="btn-clear" class="btn-clear">Сбросить фильтры</button>
+  </div>
+
+  <div class="rating-grid">
+    <div>
+      <h2 class="column-title">Рейтинг Альбомов</h2>
+      <ul class="rank-list" id="albums-list">
+        <!-- Альбомы -->
+      </ul>
+    </div>
+    
+    <div>
+      <h2 class="column-title">Рейтинг Синглов и EP</h2>
+      <ul class="rank-list" id="singles-list">
+        <!-- Синглы -->
+      </ul>
+    </div>
+  </div>
+</main>
+
+<!-- Подключение модального окна из твоей системы -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="modal-close" id="modal-close" aria-label="Закрыть">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+
+    <div class="modal-header-grid" id="modal-header-bg">
+      <div class="modal-poster" id="modal-cover"></div>
+      <div class="modal-info">
+        <p class="modal-tag" id="modal-genre"></p>
+        <h3 id="modal-title"></h3>
+        <p class="modal-artist" id="modal-artist"></p>
+        <div class="modal-rating" id="modal-rating"></div>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <div id="modal-tracks-section">
+        <p class="modal-section-title">Треклист</p>
+        <ul class="track-list" id="modal-tracks"></ul>
+      </div>
+      <div id="modal-review-section">
+        <p class="modal-section-title">Рецензия</p>
+        <p class="modal-review" id="modal-review"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { initModal, openModal, coverStyle, formatDuration, starsHTML } from './modal.js';
+
+initModal();
+
+const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const RELEASE_CARDS_VIEW = 'release_cards';
+
+let allRatedReleases = [];
+const releaseCache = new Map();
+
+// Элементы DOM
+const albumsList = document.getElementById('albums-list');
+const singlesList = document.getElementById('singles-list');
+const yearFilter = document.getElementById('filter-year');
+const monthFilter = document.getElementById('filter-month');
+const btnClear = document.getElementById('btn-clear');
+
+function rankRowHTML(release, index){
+  return `
+    <li data-id="${release.id}" tabindex="0" role="button">
+      <span class="rank-num">${String(index + 1).padStart(2,'0')}</span>
+      <div class="rank-info">
+        <p class="title">${release.title}</p>
+        <p class="artist">${release.artist}</p>
+      </div>
+      <span class="rank-score">${release.rating.toFixed(1)}</span>
+    </li>`;
+}
+
+// 1. Загрузка всех релизов с оценкой
+async function fetchAllRatedReleases() {
+  const { data, error } = await supabase
+    .from(RELEASE_CARDS_VIEW)
+    .select('*')
+    .not('rating', 'is', null)
+    .order('rating', { ascending: false });
+    
+  if (error) {
+    console.error(error);
+    return [];
+  }
+  return data;
+}
+
+// 2. Инициализация (Сбор годов и первичный рендер)
+async function initPage() {
+  allRatedReleases = await fetchAllRatedReleases();
+  allRatedReleases.forEach(r => releaseCache.set(r.id, r));
+
+  // Собираем уникальные года из поля release_date для фильтра
+  const years = new Set();
+  allRatedReleases.forEach(r => {
+    if (r.release_date) {
+      years.add(r.release_date.split('-')[0]); // Берем YYYY
+    }
+  });
+
+  // Заполняем дропдаун годов (сортируем по убыванию)
+  Array.from(years).sort().reverse().forEach(year => {
+    const opt = document.createElement('option');
+    opt.value = year;
+    opt.textContent = year;
+    yearFilter.appendChild(opt);
+  });
+
+  renderLists();
+}
+
+// 3. Основная логика фильтрации и отрисовки
+function renderLists() {
+  const selectedYear = yearFilter.value;
+  const selectedMonth = monthFilter.value;
+
+  // Фильтруем общую базу по дате
+  const filtered = allRatedReleases.filter(r => {
+    if (!r.release_date) return (selectedYear === 'all' && selectedMonth === 'all');
+    
+    const [y, m, d] = r.release_date.split('-');
+    const passYear = (selectedYear === 'all' || selectedYear === y);
+    const passMonth = (selectedMonth === 'all' || selectedMonth === m);
+    
+    return passYear && passMonth;
+  });
+
+  // Разделяем на альбомы и синглы
+  // Если у тебя в базе есть поле release_type ('album', 'single', 'ep'), используй его:
+  // const albums = filtered.filter(r => r.release_type === 'album');
+  // const singles = filtered.filter(r => r.release_type === 'single' || r.release_type === 'ep');
+  
+  // Если поле release_type пустое, опираемся на количество треков (как на главной):
+  const albums = filtered.filter(r => (r.tracks && r.tracks.length > 1));
+  const singles = filtered.filter(r => !(r.tracks && r.tracks.length > 1));
+
+  // Отрисовка
+  albumsList.innerHTML = albums.length 
+    ? albums.map((r, i) => rankRowHTML(r, i)).join('') 
+    : '<div class="empty-state">Нет альбомов за этот период.</div>';
+    
+  singlesList.innerHTML = singles.length 
+    ? singles.map((r, i) => rankRowHTML(r, i)).join('') 
+    : '<div class="empty-state">Нет синглов за этот период.</div>';
+}
+
+// 4. Слушатели событий
+yearFilter.addEventListener('change', renderLists);
+monthFilter.addEventListener('change', renderLists);
+
+btnClear.addEventListener('click', () => {
+  yearFilter.value = 'all';
+  monthFilter.value = 'all';
+  renderLists();
+});
+
+// Открытие модального окна
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-id]');
+  if (!el) return;
+  const release = releaseCache.get(el.dataset.id);
+  if (release) openModal(release);
+});
+
+// Запуск
+initPage();
+</script>
+</body>
+</html>
