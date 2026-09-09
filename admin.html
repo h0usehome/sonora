@@ -335,18 +335,18 @@
         }).join('');
     }
 
-    // --- CRUD ЛОГИКА ---
-    function addTrackRow(trackName = '') {
-        trackCount++;
-        const div = document.createElement('div');
-        div.className = 'track-row';
-        div.innerHTML = `
-            <span class="num">${trackCount}</span>
-            <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2; padding: 8px;">
-            <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
-        `;
-        tracksContainer.appendChild(div);
-    }
+    function addTrackRow(trackName = '', trackRating = '') {
+    trackCount++;
+    const div = document.createElement('div');
+    div.className = 'track-row';
+    div.innerHTML = `
+        <span class="num">${trackCount}</span>
+        <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2; padding: 8px;">
+        <input type="number" class="t-rating" placeholder="Оценка (0-10)" min="0" max="10" step="0.1" value="${trackRating}" style="width: 130px; padding: 8px; font-size: 13px;">
+        <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
+    `;
+    tracksContainer.appendChild(div);
+}
 
     function updateTrackNumbers() {
         const rows = tracksContainer.querySelectorAll('.track-row');
@@ -449,19 +449,19 @@
         }
     }
 
-    // Сохранение формы
-    document.getElementById('release-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmit');
-        const msg = document.getElementById('status-msg');
-        
-        btn.textContent = 'Сохранение...'; btn.disabled = true; msg.textContent = '';
-
-        // Сбор треков
+    // Сбор треков
         const tracks = [];
         document.querySelectorAll('.track-row').forEach((row, index) => {
             const title = row.querySelector('.t-title').value.trim();
-            if (title) tracks.push({ number: index + 1, title: title, duration: null });
+            const ratingVal = row.querySelector('.t-rating').value.trim();
+            const rating = ratingVal ? parseFloat(ratingVal) : null; // Если пусто, отправляем null
+            
+            if (title) tracks.push({ 
+                number: index + 1, 
+                title: title, 
+                rating: rating, // <--- Добавили передачу оценки
+                duration: null 
+            });
         });
 
         // Сбор выбранных жанров
@@ -637,12 +637,14 @@
                 }
             }
 
-            tracksContainer.innerHTML = ''; trackCount = 0;
-            if (album.tracks && album.tracks.track) {
-                const tracks = Array.isArray(album.tracks.track) ? album.tracks.track : [album.tracks.track];
-                if (tracks.length > 0) tracks.forEach(t => addTrackRow(t.name));
-                else addTrackRow(); 
-            } else { addTrackRow(); }
+            tracksContainer.innerHTML = '';
+        trackCount = 0;
+        if (tracks && tracks.length > 0) {
+            // Передаем и название, и сохраненную оценку (если она есть)
+            tracks.forEach(t => addTrackRow(t.title, t.rating || ''));
+        } else {
+            addTrackRow();
+        }
 
         } catch (error) {
             alert('Ошибка сети API: ' + error.message);
