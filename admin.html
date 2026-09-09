@@ -63,9 +63,19 @@
         .btn-del:hover { background: var(--danger); color: white; }
         .btn-sec { background: var(--surface-2); color: var(--text); padding: 10px 16px; border: 1px solid var(--border); font-size: 13px; }
 
-        /* Переключатели */
+        /* Чекбоксы (Переключатели) */
         .switch-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; font-weight: 500; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); }
         .switch-label input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+        /* Жанры (Теги) */
+        .tag-group { border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--surface-2); }
+        .tag-group-title { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; font-weight: 600; }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .tag-checkbox { display: inline-block; cursor: pointer; }
+        .tag-checkbox input { display: none; }
+        .tag-checkbox span { display: inline-block; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 13px; transition: 0.2s; user-select: none; color: var(--text); }
+        .tag-checkbox input:checked + span { background: var(--accent); border-color: var(--accent); color: #121014; font-weight: 600; }
+        .tag-checkbox:hover span { background: rgba(255,255,255,0.05); }
 
         /* Треки */
         .track-row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; background: var(--surface-2); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
@@ -115,13 +125,24 @@
                 </div>
 
                 <div class="row">
-                    <input type="text" id="f_genre" required placeholder="Жанр (напр. Synthwave)">
                     <select id="f_type">
                         <option value="album">Альбом</option>
                         <option value="single">Сингл</option>
                         <option value="ep">EP (Мини-альбом)</option>
                     </select>
                     <input type="date" id="f_date" title="Дата выхода">
+                </div>
+
+                <!-- БЛОК ВЫБОРА ЖАНРОВ -->
+                <div class="tag-group">
+                    <div class="tag-group-title">Жанры (выберите один или несколько)</div>
+                    <div class="tags-container" id="genresContainer">
+                        <!-- Жанры генерируются через JS -->
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newGenreInput" placeholder="Свой жанр (если нет в списке)" style="padding: 10px; font-size: 13px;">
+                        <button type="button" class="btn-sec" onclick="addNewGenre()">Добавить</button>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -216,6 +237,52 @@
     let trackCount = 0;
     const tracksContainer = document.getElementById('tracks-container');
     let currentReleases = [];
+
+    // --- ЖАНРЫ (МНОЖЕСТВЕННЫЙ ВЫБОР) ---
+    const MUSIC_GENRES = ['Synthwave', 'Retrowave', 'Electronic', 'Pop', 'Indie Pop', 'Rock', 'Alternative', 'Hip-Hop', 'R&B', 'Ambient', 'House', 'Techno', 'Metal', 'Jazz', 'Classical', 'Soundtrack'];
+
+    function renderGenres() {
+        const container = document.getElementById('genresContainer');
+        container.innerHTML = MUSIC_GENRES.map(g => createGenreHTML(g)).join('');
+    }
+
+    function createGenreHTML(name, isChecked = false) {
+        return `
+            <label class="tag-checkbox">
+                <input type="checkbox" class="cb-genre" value="${name}" ${isChecked ? 'checked' : ''}>
+                <span>${name}</span>
+            </label>
+        `;
+    }
+
+    function addNewGenre(customName = null) {
+        const input = document.getElementById('newGenreInput');
+        const val = customName || input.value.trim();
+        if (!val) return;
+        
+        // Проверяем, есть ли уже такой жанр (игнорируя регистр)
+        const existing = Array.from(document.querySelectorAll('.cb-genre'));
+        const found = existing.find(cb => cb.value.toLowerCase() === val.toLowerCase());
+        
+        if (!found) {
+            // Создаем новый чекбокс и сразу отмечаем его
+            document.getElementById('genresContainer').insertAdjacentHTML('beforeend', createGenreHTML(val, true));
+        } else {
+            // Если такой уже есть, просто ставим галочку
+            found.checked = true;
+        }
+        
+        if (!customName) input.value = '';
+    }
+
+    // Добавляем жанр по нажатию Enter в поле ввода
+    document.getElementById('newGenreInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addNewGenre();
+        }
+    });
+
 
     // --- НАВИГАЦИЯ ---
     function switchTab(tabId) {
@@ -312,7 +379,6 @@
         document.getElementById('f_title').value = release.title || '';
         document.getElementById('f_artist').value = release.artists?.name || '';
         document.getElementById('f_cover_url').value = release.cover_url || ''; 
-        document.getElementById('f_genre').value = release.genre || '';
         document.getElementById('f_date').value = release.release_date || '';
         document.getElementById('f_type').value = release.release_type || 'album';
         document.getElementById('f_theme').value = release.cover_theme || 'teal';
@@ -320,6 +386,13 @@
         document.getElementById('f_review').value = release.review || '';
         document.getElementById('f_is_new').checked = release.is_new;
         document.getElementById('f_is_summer').checked = release.is_summer_pick;
+
+        // Восстановление жанров
+        document.querySelectorAll('.cb-genre').forEach(cb => cb.checked = false);
+        if (release.genre) {
+            const genresArr = release.genre.split(',').map(s => s.trim());
+            genresArr.forEach(g => { if (g) addNewGenre(g); });
+        }
 
         tracksContainer.innerHTML = '';
         trackCount = 0;
@@ -349,6 +422,8 @@
         tracksContainer.innerHTML = '';
         trackCount = 0;
         addTrackRow();
+
+        document.querySelectorAll('.cb-genre').forEach(cb => cb.checked = false);
 
         document.getElementById('formTitle').innerText = 'Добавление релиза';
         const submitBtn = document.getElementById('btnSubmit');
@@ -383,11 +458,23 @@
         
         btn.textContent = 'Сохранение...'; btn.disabled = true; msg.textContent = '';
 
+        // Сбор треков
         const tracks = [];
         document.querySelectorAll('.track-row').forEach((row, index) => {
             const title = row.querySelector('.t-title').value.trim();
             if (title) tracks.push({ number: index + 1, title: title, duration: null });
         });
+
+        // Сбор выбранных жанров
+        const selectedGenres = Array.from(document.querySelectorAll('.cb-genre:checked')).map(cb => cb.value).join(', ');
+
+        if (!selectedGenres) {
+            msg.style.color = 'var(--danger)';
+            msg.textContent = '❌ Выберите хотя бы один жанр!';
+            btn.textContent = editingReleaseId ? '💾 Сохранить изменения' : 'Сохранить релиз';
+            btn.disabled = false;
+            return;
+        }
 
         if (tracks.length === 0) {
             msg.style.color = 'var(--danger)';
@@ -402,7 +489,7 @@
                 // ОБНОВЛЕНИЕ
                 await supabaseClient.from('releases').update({
                     title: document.getElementById('f_title').value.trim(),
-                    genre: document.getElementById('f_genre').value.trim(),
+                    genre: selectedGenres,
                     release_type: document.getElementById('f_type').value,
                     cover_url: document.getElementById('f_cover_url').value.trim() || null,
                     cover_theme: document.getElementById('f_theme').value,
@@ -425,7 +512,7 @@
                 const payload = {
                     p_artist_name: document.getElementById('f_artist').value.trim(),
                     p_title: document.getElementById('f_title').value.trim(),
-                    p_genre: document.getElementById('f_genre').value.trim(),
+                    p_genre: selectedGenres,
                     p_release_type: document.getElementById('f_type').value,
                     p_cover_url: document.getElementById('f_cover_url').value.trim() || null,
                     p_cover_theme: document.getElementById('f_theme').value,
@@ -464,7 +551,6 @@
     async function renderSummerSort() {
         const container = document.getElementById('summerDragContainer');
         
-        // Получаем свежие данные для сортировки
         const { data, error } = await supabaseClient.from('releases').select('id, title, summer_pick_rank, artists(name)').eq('is_summer_pick', true).order('summer_pick_rank', { ascending: true });
         
         if (error || !data || data.length === 0) {
@@ -542,11 +628,13 @@
                 if (largest) document.getElementById('f_cover_url').value = largest;
             }
 
-            const genreInput = document.getElementById('f_genre');
-            if (!genreInput.value && album.tags && album.tags.tag) {
+            // Автодобавление и выделение жанра
+            if (album.tags && album.tags.tag) {
                 const tags = Array.isArray(album.tags.tag) ? album.tags.tag : [album.tags.tag];
                 if (tags.length > 0 && tags[0].name) {
-                    genreInput.value = tags[0].name.charAt(0).toUpperCase() + tags[0].name.slice(1);
+                    let tagName = tags[0].name;
+                    tagName = tagName.charAt(0).toUpperCase() + tagName.slice(1);
+                    addNewGenre(tagName);
                 }
             }
 
@@ -565,6 +653,7 @@
     }
 
     // Инициализация при загрузке страницы
+    renderGenres();
     addTrackRow();
     loadReleases();
 </script>
