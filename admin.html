@@ -332,14 +332,17 @@
     }
 
     // --- ТРЕКИ ---
-    function addTrackRow(trackName = '', trackRating = '') {
+    function addTrackRow(trackName = '', isHit = false) {
         trackCount++;
         const div = document.createElement('div');
         div.className = 'track-row';
         div.innerHTML = `
             <span class="num">${trackCount}</span>
             <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2; padding: 8px;">
-            <input type="number" class="t-rating" placeholder="Оценка (0-10)" min="0" max="10" step="0.1" value="${trackRating}" style="width: 130px; padding: 8px; font-size: 13px;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin: 0 10px; user-select: none;">
+                <input type="checkbox" class="t-hit" ${isHit ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;">
+                ⚡ Хит
+            </label>
             <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
         `;
         tracksContainer.appendChild(div);
@@ -394,7 +397,7 @@
         tracksContainer.innerHTML = '';
         trackCount = 0;
         if (tracks && tracks.length > 0) {
-            tracks.forEach(t => addTrackRow(t.title, t.rating || ''));
+            tracks.forEach(t => addTrackRow(t.title, t.is_favorite || false));
         } else {
             addTrackRow();
         }
@@ -465,7 +468,7 @@
             if (title) tracks.push({ 
                 number: index + 1, 
                 title: title, 
-                rating: rating, 
+                is_favorite: isHit, 
                 duration: null 
             });
         });
