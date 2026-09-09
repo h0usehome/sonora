@@ -184,7 +184,11 @@
   }
   .post-cover {
     width: 200px; height: 200px; flex-shrink: 0;
-    border-radius: var(--radius-sm); background-size: cover; background-position: center;
+    border-radius: var(--radius-sm); 
+    background-size: cover; 
+    background-position: center;
+    background-repeat: no-repeat; /* 👈 Запрещаем дублирование по краям */
+    background-color: var(--surface-2); /* Темный фон на случай неровных краев картинки */
     border: 1px solid rgba(255,255,255,0.05);
   }
   .post-content {
