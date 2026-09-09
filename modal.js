@@ -51,6 +51,7 @@ export function initModal() {
 }
 
 // Открытие модалки с данными конкретного релиза
+// Открытие модалки с данными конкретного релиза
 export function openModal(release) {
   const modalOverlay = document.getElementById('modal-overlay');
   const modalCover = document.getElementById('modal-cover');
@@ -65,32 +66,31 @@ export function openModal(release) {
   document.getElementById('modal-artist').textContent = release.artist;
   document.getElementById('modal-rating').innerHTML = starsHTML(release.rating, 'lg');
 
-  // Находим контейнер треклиста внутри modal.js
+  // --- НАЧАЛО БЛОКА ДЛЯ ЗАМЕНЫ ---
   const tracksContainer = document.getElementById('modal-tracks');
   const tracks = release.tracks || [];
 
   if (tracks.length > 0) {
-    // Сортируем треки по номеру, чтобы они шли по порядку
     const sortedTracks = tracks.sort((a, b) => a.number - b.number);
     
     tracksContainer.innerHTML = sortedTracks.map(t => {
-      // Если оценка есть (не null и не пустая), создаем для неё красивый бейдж. Если нет — оставляем пустую строку.
-      const ratingBadge = (t.rating !== null && t.rating !== undefined)
-        ? `<span style="margin-left: auto; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(232, 163, 61, 0.1); padding: 2px 6px; border-radius: 4px;">★ ${Number(t.rating).toFixed(1)}</span>` 
+      // Проверяем нашу новую колонку is_favorite (true/false)
+      const hitBadge = t.is_favorite 
+        ? `<span title="Выделенный трек" style="margin-left: auto; color: var(--accent); font-size: 15px; filter: drop-shadow(0 0 4px rgba(232, 163, 61, 0.4));">⚡</span>` 
         : '';
 
-      // Формируем строку трека
       return `
         <li>
           <span class="num">${String(t.number).padStart(2, '0')}</span>
           <span class="t-title">${t.title}</span>
-          ${ratingBadge}
+          ${hitBadge}
         </li>
       `;
     }).join('');
   } else {
     tracksContainer.innerHTML = '<li style="color: var(--text-muted); font-size: 13px;">Треклист отсутствует</li>';
   }
+  // --- КОНЕЦ БЛОКА ДЛЯ ЗАМЕНЫ ---
 
   const reviewSection = document.getElementById('modal-review-section');
   if (release.review) {
