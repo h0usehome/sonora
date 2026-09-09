@@ -450,27 +450,23 @@
         }
     }
 
-    // --- СОХРАНЕНИЕ ФОРМЫ (ИСПРАВЛЕНО) ---
-    document.getElementById('release-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btnSubmit');
-        const msg = document.getElementById('status-msg');
-        
-        btn.textContent = 'Сохранение...'; btn.disabled = true; msg.textContent = '';
-
-        // Сбор треков и их оценок
+    // Сбор треков и их отметок (молний)
         const tracks = [];
         document.querySelectorAll('.track-row').forEach((row, index) => {
-            const title = row.querySelector('.t-title').value.trim();
-            const ratingVal = row.querySelector('.t-rating').value.trim();
-            const rating = ratingVal ? parseFloat(ratingVal) : null; 
+            const titleInput = row.querySelector('.t-title');
+            const hitInput = row.querySelector('.t-hit');
             
-            if (title) tracks.push({ 
-                number: index + 1, 
-                title: title, 
-                is_favorite: isHit, 
-                duration: null 
-            });
+            const title = titleInput ? titleInput.value.trim() : '';
+            const isHit = hitInput ? hitInput.checked : false; 
+            
+            if (title) {
+                tracks.push({ 
+                    number: index + 1, 
+                    title: title, 
+                    is_favorite: isHit, 
+                    duration: null 
+                });
+            }
         });
 
         // Сбор выбранных жанров
