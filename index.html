@@ -319,7 +319,8 @@
       <span class="logo-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
     </div>
     <nav aria-label="Разделы сайта">
-      <a href="#releases" class="active">Лента релизов</a>
+      <a href="index.html" class="active">Лента релизов</a>
+      <a href="rating.html">Рейтинг</a> <!-- ДОБАВИЛИ ССЫЛКУ -->
       <a href="summer.html">Треки лета</a>
       <a href="releases.html">Каталог</a>
     </nav>
@@ -421,8 +422,7 @@ function feedPostHTML(release){
       <div class="post-content">
         <div class="post-header">
           <span class="post-genre">${release.genre || 'Музыка'}</span>
-          ${release.rating ? `<div class="post-rating">${starsHTML(release.rating)} <span class="rating-num">${release.rating.toFixed(1)}</span></div>` : ''}
-        </div>
+          ${release.rating ? `<div class="post-rating">${starsHTML(release.rating)}</div>` : ''}        </div>
         
         <h3 class="post-title">${release.title}</h3>
         <p class="post-artist">${release.artist}</p>
