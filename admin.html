@@ -450,7 +450,15 @@
         }
     }
 
-    // Сбор треков и их отметок (молний)
+    // --- СОХРАНЕНИЕ ФОРМЫ ---
+    document.getElementById('release-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const msg = document.getElementById('status-msg');
+        
+        btn.textContent = 'Сохранение...'; btn.disabled = true; msg.textContent = '';
+
+        // Сбор треков и их отметок (хитов)
         const tracks = [];
         document.querySelectorAll('.track-row').forEach((row, index) => {
             const titleInput = row.querySelector('.t-title');
@@ -505,7 +513,7 @@
                 }).eq('id', editingReleaseId);
 
                 await supabaseClient.from('tracks').delete().eq('release_id', editingReleaseId);
-                const newTracksToInsert = tracks.map(t => ({ release_id: editingReleaseId, title: t.title, number: t.number, rating: t.rating }));
+                const newTracksToInsert = tracks.map(t => ({ release_id: editingReleaseId, title: t.title, number: t.number, is_favorite: t.is_favorite }));
                 await supabaseClient.from('tracks').insert(newTracksToInsert);
 
                 alert('✅ Релиз успешно обновлен!');
@@ -610,7 +618,7 @@
         const artist = document.getElementById('f_artist').value.trim();
         const title = document.getElementById('f_title').value.trim();
 
-        if (!artist || !title) return alert('Укажите Артиста и Название релиза!');
+        if (!artist || !title) return alert('Укажите Артист и Название релиза!');
         
         const API_KEY = '3b161b314c4488462ce9102305148fe5';
         const btn = document.getElementById('btn-autofetch');
@@ -630,7 +638,6 @@
                 if (largest) document.getElementById('f_cover_url').value = largest;
             }
 
-            // Автодобавление и выделение жанра
             if (album.tags && album.tags.tag) {
                 const tags = Array.isArray(album.tags.tag) ? album.tags.tag : [album.tags.tag];
                 if (tags.length > 0 && tags[0].name) {
@@ -644,7 +651,7 @@
             trackCount = 0;
             if (album.tracks && album.tracks.track) {
                 const tracks = Array.isArray(album.tracks.track) ? album.tracks.track : [album.tracks.track];
-                if (tracks.length > 0) tracks.forEach(t => addTrackRow(t.name));
+                if (tracks.length > 0) tracks.forEach(t => addTrackRow(t.name, false));
                 else addTrackRow(); 
             } else { 
                 addTrackRow(); 
