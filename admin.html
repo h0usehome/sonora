@@ -64,7 +64,8 @@
         .btn-sec { background: var(--surface-2); color: var(--text); padding: 10px 16px; border: 1px solid var(--border); font-size: 13px; }
 
         /* Чекбоксы (Переключатели) */
-        .switch-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; font-weight: 500; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }        .switch-label input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+        .switch-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: 14px; font-weight: 500; padding: 12px; background: var(--surface-2); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .switch-label input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 
         /* Жанры (Теги) */
         .tag-group { border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--surface-2); margin-bottom: 20px; }
@@ -259,29 +260,24 @@
         const val = customName || input.value.trim();
         if (!val) return;
         
-        // Проверяем, есть ли уже такой жанр (игнорируя регистр)
         const existing = Array.from(document.querySelectorAll('.cb-genre'));
         const found = existing.find(cb => cb.value.toLowerCase() === val.toLowerCase());
         
         if (!found) {
-            // Создаем новый чекбокс и сразу отмечаем его
             document.getElementById('genresContainer').insertAdjacentHTML('beforeend', createGenreHTML(val, true));
         } else {
-            // Если такой уже есть, просто ставим галочку
             found.checked = true;
         }
         
         if (!customName) input.value = '';
     }
 
-    // Добавляем жанр по нажатию Enter в поле ввода
     document.getElementById('newGenreInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
             addNewGenre();
         }
     });
-
 
     // --- НАВИГАЦИЯ ---
     function switchTab(tabId) {
@@ -335,18 +331,19 @@
         }).join('');
     }
 
+    // --- ТРЕКИ ---
     function addTrackRow(trackName = '', trackRating = '') {
-    trackCount++;
-    const div = document.createElement('div');
-    div.className = 'track-row';
-    div.innerHTML = `
-        <span class="num">${trackCount}</span>
-        <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2; padding: 8px;">
-        <input type="number" class="t-rating" placeholder="Оценка (0-10)" min="0" max="10" step="0.1" value="${trackRating}" style="width: 130px; padding: 8px; font-size: 13px;">
-        <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
-    `;
-    tracksContainer.appendChild(div);
-}
+        trackCount++;
+        const div = document.createElement('div');
+        div.className = 'track-row';
+        div.innerHTML = `
+            <span class="num">${trackCount}</span>
+            <input type="text" class="t-title" placeholder="Название трека" value="${trackName.replace(/"/g, '&quot;')}" required style="flex: 2; padding: 8px;">
+            <input type="number" class="t-rating" placeholder="Оценка (0-10)" min="0" max="10" step="0.1" value="${trackRating}" style="width: 130px; padding: 8px; font-size: 13px;">
+            <button type="button" class="btn-remove-track" title="Удалить трек" onclick="this.parentElement.remove(); updateTrackNumbers();">&times;</button>
+        `;
+        tracksContainer.appendChild(div);
+    }
 
     function updateTrackNumbers() {
         const rows = tracksContainer.querySelectorAll('.track-row');
@@ -369,6 +366,7 @@
         textarea.focus();
     }
 
+    // --- РЕДАКТИРОВАНИЕ ---
     async function startEdit(id) {
         const { data: release } = await supabaseClient.from('releases').select('*, artists(name)').eq('id', id).single();
         const { data: tracks } = await supabaseClient.from('tracks').select('*').eq('release_id', id).order('number', { ascending: true });
@@ -396,7 +394,7 @@
         tracksContainer.innerHTML = '';
         trackCount = 0;
         if (tracks && tracks.length > 0) {
-            tracks.forEach(t => addTrackRow(t.title));
+            tracks.forEach(t => addTrackRow(t.title, t.rating || ''));
         } else {
             addTrackRow();
         }
@@ -449,17 +447,25 @@
         }
     }
 
-    // Сбор треков
+    // --- СОХРАНЕНИЕ ФОРМЫ (ИСПРАВЛЕНО) ---
+    document.getElementById('release-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        const msg = document.getElementById('status-msg');
+        
+        btn.textContent = 'Сохранение...'; btn.disabled = true; msg.textContent = '';
+
+        // Сбор треков и их оценок
         const tracks = [];
         document.querySelectorAll('.track-row').forEach((row, index) => {
             const title = row.querySelector('.t-title').value.trim();
             const ratingVal = row.querySelector('.t-rating').value.trim();
-            const rating = ratingVal ? parseFloat(ratingVal) : null; // Если пусто, отправляем null
+            const rating = ratingVal ? parseFloat(ratingVal) : null; 
             
             if (title) tracks.push({ 
                 number: index + 1, 
                 title: title, 
-                rating: rating, // <--- Добавили передачу оценки
+                rating: rating, 
                 duration: null 
             });
         });
@@ -500,14 +506,14 @@
                 }).eq('id', editingReleaseId);
 
                 await supabaseClient.from('tracks').delete().eq('release_id', editingReleaseId);
-                const newTracksToInsert = tracks.map(t => ({ release_id: editingReleaseId, title: t.title, number: t.number }));
+                const newTracksToInsert = tracks.map(t => ({ release_id: editingReleaseId, title: t.title, number: t.number, rating: t.rating }));
                 await supabaseClient.from('tracks').insert(newTracksToInsert);
 
                 alert('✅ Релиз успешно обновлен!');
                 cancelEdit();
                 switchTab('database');
             } else {
-                // ДОБАВЛЕНИЕ (через RPC)
+                // ДОБАВЛЕНИЕ
                 const payload = {
                     p_artist_name: document.getElementById('f_artist').value.trim(),
                     p_title: document.getElementById('f_title').value.trim(),
@@ -520,7 +526,7 @@
                     p_is_new: document.getElementById('f_is_new').checked,
                     p_release_date: document.getElementById('f_date').value || null,
                     p_is_summer_pick: document.getElementById('f_is_summer').checked,
-                    p_summer_pick_rank: 999, // Дефолт, сортируется во вкладке "Треки лета"
+                    p_summer_pick_rank: 999, 
                     p_summer_pick_label: null,
                     p_tracks: tracks
                 };
@@ -549,7 +555,6 @@
     
     async function renderSummerSort() {
         const container = document.getElementById('summerDragContainer');
-        
         const { data, error } = await supabaseClient.from('releases').select('id, title, summer_pick_rank, artists(name)').eq('is_summer_pick', true).order('summer_pick_rank', { ascending: true });
         
         if (error || !data || data.length === 0) {
@@ -601,7 +606,6 @@
         }
     }
 
-
     // --- API LAST.FM (АВТОЗАПОЛНЕНИЕ) ---
     async function autoFetchAlbumData() {
         const artist = document.getElementById('f_artist').value.trim();
@@ -638,13 +642,14 @@
             }
 
             tracksContainer.innerHTML = '';
-        trackCount = 0;
-        if (tracks && tracks.length > 0) {
-            // Передаем и название, и сохраненную оценку (если она есть)
-            tracks.forEach(t => addTrackRow(t.title, t.rating || ''));
-        } else {
-            addTrackRow();
-        }
+            trackCount = 0;
+            if (album.tracks && album.tracks.track) {
+                const tracks = Array.isArray(album.tracks.track) ? album.tracks.track : [album.tracks.track];
+                if (tracks.length > 0) tracks.forEach(t => addTrackRow(t.name));
+                else addTrackRow(); 
+            } else { 
+                addTrackRow(); 
+            }
 
         } catch (error) {
             alert('Ошибка сети API: ' + error.message);
