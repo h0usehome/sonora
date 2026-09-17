@@ -106,7 +106,7 @@
     <!-- Навигация -->
     <div class="admin-nav">
         <div class="nav-tab active" onclick="switchTab('crud')">✍️ Добавление / Редактирование</div>
-        <div class="nav-tab" onclick="switchTab('summer')">☀️ Треки Лета</div>
+        <div class="nav-tab" onclick="switchTab('playlists')">🎧 Подборки</div>
         <div class="nav-tab" onclick="switchTab('database')">📋 База релизов</div>
     </div>
 
@@ -223,7 +223,59 @@
             </div>
         </div>
     </div>
+    <!-- Раздел 4: Управление подборками (Playlists) -->
+    <div id="playlists-section" class="section">
+        <div class="panel">
+            <div class="panel-title" id="pl-formTitle">Создание подборки</div>
+            <form id="playlist-form">
+                <div class="row">
+                    <input type="text" id="pl_title" required placeholder="Название подборки">
+                    <select id="pl_category" required>
+                        <option value="" disabled selected>Выберите категорию...</option>
+                        <option value="По настроению">По настроению</option>
+                        <option value="По жанру">По жанру</option>
+                        <option value="Занятия">Занятия</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <input type="url" id="pl_cover" placeholder="Ссылка на обложку (опционально)">
+                    <select id="pl_theme" title="Цветовая тема">
+                        <option value="teal">Teal (Изумрудный)</option>
+                        <option value="coral">Coral (Коралловый)</option>
+                        <option value="pink">Pink (Розовый)</option>
+                        <option value="amber">Amber (Янтарный)</option>
+                        <option value="green">Green (Зеленый)</option>
+                        <option value="plum">Plum (Сливовый)</option>
+                    </select>
+                </div>
+                <textarea id="pl_desc" placeholder="Описание подборки..."></textarea>
+                
+                <!-- Блок добавления треков -->
+                <div style="margin-top: 10px; padding: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;">
+                    <label style="font-size: 13px; color: var(--text-muted); display:block; margin-bottom: 15px; font-weight: 600; text-transform: uppercase;">Треклист подборки</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <select id="pl_track_select" style="flex: 1;"></select>
+                        <button type="button" class="btn-sec" onclick="addTrackToPlaylistUI()">+ Добавить</button>
+                    </div>
+                    <div id="pl_tracks_list" style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Треки пока не добавлены.</p>
+                    </div>
+                </div>
+                
+                <div class="row" style="margin-top: 20px;">
+                    <button type="button" id="btnCancelPl" class="btn-cancel" onclick="cancelEditPlaylist()">Отменить</button>
+                    <button type="submit" id="btnSubmitPl" class="btn-main">Сохранить подборку</button>
+                </div>
+            </form>
+        </div>
 
+        <div class="panel">
+            <div class="panel-title">Существующие подборки</div>
+            <div id="admin-playlists-list">
+                <p style="color: var(--text-muted); text-align: center;">Загрузка списка...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Библиотеки -->
@@ -676,10 +728,185 @@
         }
     }
 
+    
+    
     // Инициализация при загрузке страницы
     renderGenres();
     addTrackRow();
     loadReleases();
+
+    
+    // ==========================================
+    // ЛОГИКА ДЛЯ ПОДБОРОК (PLAYLISTS)
+    // ==========================================
+    let allDbTracks = [];
+    let currentPlaylistTracks = [];
+    let editingPlaylistId = null;
+
+    // 1. Загрузка всех существующих подборок в список
+    async function loadPlaylistsAdmin() {
+        const { data, error } = await supabaseClient.from('playlists').select('*').order('created_at', { ascending: false });
+        const list = document.getElementById('admin-playlists-list');
+        
+        if (error || !data || data.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Подборок пока нет.</p>';
+            return;
+        }
+
+        list.innerHTML = data.map(p => `
+            <div class="release-item">
+                <div class="release-info">
+                    <div>
+                        <strong style="color: var(--accent);">${p.title}</strong>
+                        <span style="margin-left: 10px; font-size: 11px; text-transform: uppercase; color: var(--text-muted);">${p.category}</span>
+                    </div>
+                </div>
+                <div class="release-actions">
+                    <button type="button" onclick="startEditPlaylist('${p.id}')" class="btn-sec">Изменить</button>
+                    <button type="button" onclick="deletePlaylist('${p.id}')" class="btn-sec" style="color: var(--danger); border-color: rgba(217, 83, 79, 0.3);">Удалить</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 2. Загрузка базы треков для выпадающего списка
+    async function loadAllTracksForPlaylists() {
+        // Достаем треки вместе с именем артиста через связь с таблицей releases
+        const { data } = await supabaseClient
+            .from('tracks')
+            .select('id, title, releases(artists(name))');
+        
+        if (data) {
+            allDbTracks = data;
+            const select = document.getElementById('pl_track_select');
+            select.innerHTML = '<option value="" disabled selected>Выберите трек из базы...</option>' + 
+                data.map(t => `<option value="${t.id}">${t.releases?.artists?.name || 'Артист'} — ${t.title}</option>`).join('');
+        }
+    }
+
+    // 3. Добавление и удаление треков в интерфейсе формы
+    function addTrackToPlaylistUI(trackId = null) {
+        const idToAdd = trackId || document.getElementById('pl_track_select').value;
+        if (!idToAdd) return;
+        
+        const trackData = allDbTracks.find(t => t.id === idToAdd);
+        if (!trackData) return;
+        if (currentPlaylistTracks.some(t => t.id === idToAdd)) {
+            if (!trackId) alert('Этот трек уже есть в подборке!');
+            return;
+        }
+        
+        currentPlaylistTracks.push(trackData);
+        renderPlaylistTracksUI();
+    }
+
+    function removeTrackFromPlaylistUI(trackId) {
+        currentPlaylistTracks = currentPlaylistTracks.filter(t => t.id !== trackId);
+        renderPlaylistTracksUI();
+    }
+
+    function renderPlaylistTracksUI() {
+        const container = document.getElementById('pl_tracks_list');
+        if (currentPlaylistTracks.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; text-align: center;">Треки пока не добавлены.</p>';
+            return;
+        }
+        container.innerHTML = currentPlaylistTracks.map((t, index) => `
+            <div class="track-row" style="justify-content: space-between; padding: 12px;">
+                <div style="font-size: 13px;"><b>${index + 1}.</b> ${t.releases?.artists?.name || 'Артист'} — ${t.title}</div>
+                <button type="button" class="btn-remove-track" onclick="removeTrackFromPlaylistUI('${t.id}')">&times;</button>
+            </div>
+        `).join('');
+    }
+
+    // 4. Редактирование, Отмена и Удаление подборки
+    async function startEditPlaylist(id) {
+        const { data: p } = await supabaseClient.from('playlists').select('*').eq('id', id).single();
+        const { data: pt } = await supabaseClient.from('playlist_tracks').select('track_id').eq('playlist_id', id).order('sort_order');
+        
+        if (!p) return;
+
+        editingPlaylistId = id;
+        document.getElementById('pl-formTitle').innerText = 'Редактирование подборки';
+        document.getElementById('pl_title').value = p.title || '';
+        document.getElementById('pl_category').value = p.category || '';
+        document.getElementById('pl_cover').value = p.cover_url || '';
+        document.getElementById('pl_theme').value = p.cover_theme || 'teal';
+        document.getElementById('pl_desc').value = p.description || '';
+
+        currentPlaylistTracks = [];
+        if (pt) pt.forEach(link => addTrackToPlaylistUI(link.track_id));
+        renderPlaylistTracksUI();
+
+        const btn = document.getElementById('btnSubmitPl');
+        btn.textContent = '💾 Сохранить изменения';
+        btn.style.backgroundColor = '#4caf50';
+        document.getElementById('btnCancelPl').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditPlaylist() {
+        editingPlaylistId = null;
+        document.getElementById('playlist-form').reset();
+        currentPlaylistTracks = [];
+        renderPlaylistTracksUI();
+        
+        document.getElementById('pl-formTitle').innerText = 'Создание подборки';
+        const btn = document.getElementById('btnSubmitPl');
+        btn.textContent = 'Сохранить подборку';
+        btn.style.backgroundColor = '';
+        document.getElementById('btnCancelPl').style.display = 'none';
+    }
+
+    async function deletePlaylist(id) {
+        if (!confirm('Удалить подборку? Сами треки останутся в базе.')) return;
+        await supabaseClient.from('playlists').delete().eq('id', id);
+        loadPlaylistsAdmin();
+    }
+
+    // 5. Сохранение подборки (Создание / Обновление через RPC)
+    document.getElementById('playlist-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentPlaylistTracks.length === 0) return alert('Добавьте хотя бы один трек!');
+
+        const btn = document.getElementById('btnSubmitPl');
+        btn.textContent = 'Сохранение...'; btn.disabled = true;
+
+        const payload = {
+            p_id: editingPlaylistId, // null если создаем новую
+            p_title: document.getElementById('pl_title').value.trim(),
+            p_description: document.getElementById('pl_desc').value.trim() || null,
+            p_category: document.getElementById('pl_category').value,
+            p_cover_url: document.getElementById('pl_cover').value.trim() || null,
+            p_cover_theme: document.getElementById('pl_theme').value,
+            // Формируем JSON массив для RPC функции
+            p_tracks: currentPlaylistTracks.map((t, index) => ({
+                track_id: t.id,
+                sort_order: index + 1
+            }))
+        };
+
+        try {
+            const { error } = await supabaseClient.rpc('save_playlist', payload);
+            if (error) throw error;
+            
+            alert('✅ Подборка успешно сохранена!');
+            cancelEditPlaylist();
+            loadPlaylistsAdmin();
+        } catch (err) {
+            console.error(err);
+            alert('❌ Ошибка сохранения: ' + err.message);
+        } finally {
+            if(!editingPlaylistId) {
+                btn.textContent = 'Сохранить подборку'; 
+            }
+            btn.disabled = false;
+        }
+    });
+
+    // Инициализация загрузки данных при старте
+    loadAllTracksForPlaylists();
+    loadPlaylistsAdmin();
 </script>
 </body>
 </html>
