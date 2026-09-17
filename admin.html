@@ -77,6 +77,16 @@
         .tag-checkbox input:checked + span { background: var(--accent); border-color: var(--accent); color: #121014; font-weight: 600; }
         .tag-checkbox:hover span { background: rgba(255,255,255,0.05); }
 
+        .admin-cover-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        flex-shrink: 0;
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
         /* Треки */
         .track-row { display: flex; gap: 12px; align-items: center; margin-bottom: 10px; background: var(--surface-2); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
         .track-row .num { font-family: 'JetBrains Mono', monospace; color: var(--text-muted); width: 24px; text-align: right; }
@@ -218,6 +228,12 @@
     <div id="database-section" class="section">
         <div class="panel">
             <div class="panel-title">Все релизы в базе</div>
+            
+            <!-- Строка поиска -->
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="adminSearchInput" placeholder="🔍 Поиск по названию или артисту..." autocomplete="off">
+            </div>
+
             <div id="releases-list">
                 <p style="color: var(--text-muted); text-align: center;">Загрузка списка...</p>
             </div>
@@ -345,37 +361,55 @@
         if(tabId === 'summer') renderSummerSort();
     }
 
-    // --- БАЗА И СПИСОК РЕЛИЗОВ ---
+   // --- БАЗА И СПИСОК РЕЛИЗОВ ---
+    const THEME_GRADIENT = {
+        teal:  'linear-gradient(150deg,#2f7a72 0%,#1c4a45 100%)',
+        coral: 'linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%)',
+        pink:  'linear-gradient(150deg,#b5566f 0%,#732f42 100%)',
+        amber: 'linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%)',
+        green: 'linear-gradient(150deg,#5c8a4a 0%,#33502a 100%)',
+        plum:  'linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%)'
+    };
+
+    function getAdminCoverStyle(release) {
+        if (release.cover_url) return `background-image: url('${release.cover_url}')`;
+        return `background: ${THEME_GRADIENT[release.cover_theme] || THEME_GRADIENT.teal}`;
+    }
+
     async function loadReleases() {
         const { data, error } = await supabaseClient
             .from('release_cards')
             .select('*')
             .order('created_at', { ascending: false });
 
-        const list = document.getElementById('releases-list');
-        
         if (error) {
-            list.innerHTML = `<p style="color: var(--danger);">Ошибка: ${error.message}</p>`;
+            document.getElementById('releases-list').innerHTML = `<p style="color: var(--danger);">Ошибка: ${error.message}</p>`;
             return;
         }
 
         currentReleases = data || [];
+        renderAdminReleases(currentReleases);
+    }
+
+    function renderAdminReleases(releasesToRender) {
+        const list = document.getElementById('releases-list');
         
-        if (currentReleases.length === 0) {
-            list.innerHTML = '<p style="text-align:center;">Релизов пока нет.</p>';
+        if (releasesToRender.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Ничего не найдено.</p>';
             return;
         }
 
-        list.innerHTML = currentReleases.map(release => {
+        list.innerHTML = releasesToRender.map(release => {
             const type = (release.tracks && release.tracks.length <= 1) ? 'Сингл' : 'Альбом';
             const color = type === 'Сингл' ? 'var(--accent)' : 'var(--text-muted)';
             
             return `
             <div class="release-item">
                 <div class="release-info">
+                    <div class="admin-cover-thumb" style="${getAdminCoverStyle(release)}"></div>
                     <div>
                         <strong style="color: var(--accent);">${release.artist || 'Артист'}</strong> — ${release.title}
-                        <span style="margin-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; color: ${color};">${type}</span>
+                        <div style="margin-top: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; color: ${color};">${type}</div>
                     </div>
                 </div>
                 <div class="release-actions">
@@ -385,6 +419,22 @@
             </div>`;
         }).join('');
     }
+
+    // Слушатель для живого поиска
+    document.getElementById('adminSearchInput').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+            renderAdminReleases(currentReleases);
+            return;
+        }
+        
+        const filtered = currentReleases.filter(r => 
+            (r.title && r.title.toLowerCase().includes(query)) || 
+            (r.artist && r.artist.toLowerCase().includes(query))
+        );
+        
+        renderAdminReleases(filtered);
+    });
 
     // --- ТРЕКИ ---
     function addTrackRow(trackName = '', isHit = false) {
