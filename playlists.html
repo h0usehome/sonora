@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonora — Подборки</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="modal.css">
+<style>
+  :root{
+    --bg: #121014; --surface-1: #1b181d; --surface-2: #242026;
+    --border: rgba(242,237,230,0.09); --border-strong: rgba(242,237,230,0.16);
+    --text: #f2ede6; --text-secondary: rgba(242,237,230,0.62); --text-muted: rgba(242,237,230,0.38);
+    --accent: #e8a33d;
+    --coral: linear-gradient(150deg,#c65b3f 0%,#8a3a2c 100%);
+    --teal: linear-gradient(150deg,#2f7a72 0%,#1c4a45 100%);
+    --pink: linear-gradient(150deg,#b5566f 0%,#732f42 100%);
+    --amber: linear-gradient(150deg,#d99a3d 0%,#8c5c1d 100%);
+    --green: linear-gradient(150deg,#5c8a4a 0%,#33502a 100%);
+    --plum: linear-gradient(150deg,#6b5a9e 0%,#3d3162 100%);
+    --radius: 14px; --radius-sm: 8px;
+  }
+  *{box-sizing:border-box;} html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;}
+  a{color:inherit; text-decoration:none;} button{font-family:inherit;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+
+  /* Header */
+  header{position:sticky; top:0; z-index:20; background:rgba(18,16,20,0.86); backdrop-filter:blur(10px); border-bottom:1px solid var(--border);}
+  .header-inner{display:flex; align-items:center; justify-content:space-between; padding:18px 0;}
+  .logo{display:flex; align-items:baseline; gap:10px;}
+  .logo-mark{font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:23px;}
+  .logo-wave{display:flex; align-items:flex-end; gap:2px; height:14px; opacity:0.85;}
+  .logo-wave span{width:2px; background:var(--accent); border-radius:2px; animation:wave 1.8s ease-in-out infinite;}
+  .logo-wave span:nth-child(1){height:40%;} .logo-wave span:nth-child(2){height:100%;} 
+  .logo-wave span:nth-child(3){height:65%;} .logo-wave span:nth-child(4){height:85%;}
+  @keyframes wave{0%,100%{transform:scaleY(0.6);} 50%{transform:scaleY(1);}}
+  
+  nav{display:flex; gap:28px;}
+  nav a{font-size:13.5px; color:var(--text-secondary); padding:6px 0; position:relative; transition:color 0.2s ease;}
+  nav a:hover{color:var(--text);}
+  nav a.active{color:var(--accent); font-weight:500;}
+  nav a.active::after{content:''; position:absolute; left:0; right:0; bottom:-19px; height:2px; background:var(--accent);}
+
+  /* Content */
+  main{padding:40px 0 80px;}
+  .page-title {font-family:'Fraunces',serif; font-weight:500; font-size:34px; margin: 0 0 40px;}
+  
+  .category-section {margin-bottom: 56px;}
+  .section-head {display:flex; align-items:baseline; justify-content:space-between; margin-bottom:18px; padding-bottom: 10px; border-bottom: 1px solid var(--border);}
+  .section-head h2 {font-family:'Fraunces',serif; font-weight:500; font-size:20px; margin:0;}
+
+  /* Grid */
+  .releases{display:grid; grid-template-columns:repeat(5,1fr); gap:18px;}
+  .release-card{
+    position:relative; border-radius:var(--radius-sm); overflow:hidden; aspect-ratio:1/1.05;
+    transition:transform 0.25s ease; cursor:pointer; border:none; padding:0; text-align:left; background:var(--surface-1); display:block;
+  }
+  .release-card:hover{transform:translateY(-4px);}
+  .release-card .cover{position:absolute; inset:0; background-size:cover; background-position:center;}
+  .release-card .cover::after{content:''; position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 60%);}
+  
+  .release-meta{position:absolute; left:0; right:0; bottom:0; padding:12px 14px; z-index:1;}
+  .release-meta .title{font-size:14px; font-weight:600; margin:0;}
+  .release-meta .artist{font-size:12px; color:rgba(242,237,230,0.7); margin:4px 0 0;}
+  
+  .release-tag{
+    position:absolute; top:10px; left:10px; z-index:1;
+    font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; 
+    background:rgba(18,16,20,0.65); backdrop-filter:blur(4px); padding:4px 10px; border-radius:999px; color:var(--text);
+  }
+
+  .state-msg{font-size:14px; color:var(--text-muted); padding:20px 0;}
+  footer{border-top:1px solid var(--border); padding:24px 0; margin-top:60px;}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);}
+
+  @media (max-width:1080px){.releases{grid-template-columns:repeat(4,1fr);}}
+  @media (max-width:920px){.releases{grid-template-columns:repeat(3,1fr);} nav{display:none;}}
+  @media (max-width:640px){.releases{grid-template-columns:repeat(2,1fr); gap:12px;} .wrap{padding:0 18px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <a class="logo" href="index.html">
+      <span class="logo-mark">Sonora</span>
+      <span class="logo-wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+    </a>
+    <nav aria-label="Разделы сайта">
+      <a href="index.html#releases">Новинки</a>
+      <a href="index.html#rating">Рейтинг</a>
+      <a href="playlists.html" class="active">Подборки</a>
+      <a href="index.html#reviews">Рецензии</a>
+      <a href="releases.html">Все релизы</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="page-title">Кураторские подборки</h1>
+  <div id="playlists-container">
+    <p class="state-msg">Загрузка подборок...</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Sonora — коллекция музыки</span>
+  </div>
+</footer>
+
+<!-- Модальное окно (Точно такое же, как на остальных страницах) -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="modal-close" id="modal-close" aria-label="Закрыть">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-header-grid" id="modal-header-bg">
+      <div class="modal-poster" id="modal-cover"></div>
+      <div class="modal-info">
+        <p class="modal-tag" id="modal-genre"></p>
+        <h3 id="modal-title"></h3>
+        <p class="modal-artist" id="modal-artist"></p>
+        <div class="modal-rating" id="modal-rating"></div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="modal-tracks-section">
+        <p class="modal-section-title">Треклист</p>
+        <ul class="track-list" id="modal-tracks"></ul>
+      </div>
+      <div id="modal-review-section">
+        <p class="modal-section-title">Описание</p>
+        <p class="modal-review" id="modal-review"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { initModal, openModal, coverStyle } from './modal.js';
+
+// Инициализируем модалку
+initModal();
+
+const SUPABASE_URL = 'https://xlavseqcmfiqbiheajea.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYXZzZXFjbWZpcWJpaGVhamVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTc2ODgsImV4cCI6MjEwMDQ3MzY4OH0.Biwof0qcafViagViPddujVId4Q6nVguGCkoLJ0urdeE';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const playlistCache = new Map();
+
+async function loadPlaylists() {
+  const container = document.getElementById('playlists-container');
+  
+  // Загружаем данные из VIEW, которое мы создали на Шаге 1
+  const { data, error } = await supabase
+    .from('playlist_cards')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error || !data) {
+    container.innerHTML = '<p class="state-msg error">Не удалось загрузить подборки.</p>';
+    console.error(error);
+    return;
+  }
+
+  if (data.length === 0) {
+    container.innerHTML = '<p class="state-msg">Подборок пока нет. Создайте первую в панели управления!</p>';
+    return;
+  }
+
+  // Группируем плейлисты по категориям (Настроение, Жанр, Занятия)
+  const grouped = data.reduce((acc, p) => {
+    if (!acc[p.category]) acc[p.category] = [];
+    acc[p.category].push(p);
+    return acc;
+  }, {});
+
+  // Рендерим HTML секций и карточек
+  container.innerHTML = Object.entries(grouped).map(([category, items]) => `
+    <div class="category-section">
+      <div class="section-head"><h2>${category}</h2></div>
+      <div class="releases">
+        ${items.map(p => {
+          playlistCache.set(p.id, p);
+          const trackCount = p.tracks ? p.tracks.length : 0;
+          return `
+            <article class="release-card" data-playlist-id="${p.id}" tabindex="0" role="button">
+              <div class="cover" style="${coverStyle(p)}"></div>
+              <span class="release-tag">Подборка</span>
+              <div class="release-meta">
+                <p class="title">${p.title}</p>
+                <p class="artist">${trackCount} треков</p>
+              </div>
+            </article>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Слушатель клика на карточку подборки
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-playlist-id]');
+  if (!el) return;
+  
+  const p = playlistCache.get(el.dataset.playlistId);
+  if (p) {
+    // Подгоняем данные подборки под формат, который ожидает openModal()
+    openModal({
+      ...p,
+      genre: p.category,              // Выводим категорию вместо жанра над заголовком
+      artist: 'Sonora Mix',           // В качестве автора указываем проект
+      review: p.description,          // Описание пойдет в блок рецензии
+      rating: null                    // Отключаем звезды рейтинга
+    });
+  }
+});
+
+// Запускаем загрузку
+loadPlaylists();
+</script>
+
+</body>
+</html>
