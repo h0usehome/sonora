@@ -171,10 +171,13 @@
                     Добавить в подборку «Треки лета»
                 </label>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; margin-top: 10px;">
-                    <label style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Текст рецензии</label>
-                    <button type="button" onclick="insertImageTag('f_review')" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: #fff; padding: 4px 10px; font-size: 12px; border-radius: 6px; cursor: pointer;">🖼️ Вставить картинку</button>
-                </div>
+               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; margin-top: 10px;">
+    <label style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Текст рецензии</label>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="insertLinkTag('f_review')" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: #fff; padding: 4px 10px; font-size: 12px; border-radius: 6px; cursor: pointer;">🔗 Вставить ссылку</button>
+        <button type="button" onclick="insertImageTag('f_review')" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: #fff; padding: 4px 10px; font-size: 12px; border-radius: 6px; cursor: pointer;">🖼️ Вставить картинку</button>
+    </div>
+</div>
                 <textarea id="f_review" placeholder="Напишите пару слов об альбоме..."></textarea>
             </div>
 
@@ -357,14 +360,23 @@
         });
     }
 
-    function insertImageTag(fieldId) {
+    function insertLinkTag(fieldId) {
         const textarea = document.getElementById(fieldId);
-        const url = prompt('Введите прямую ссылку на картинку:');
-        if (!url) return;
-        const tag = `[img]${url.trim()}[/img]`;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         const text = textarea.value;
+        const selectedText = text.substring(start, end);
+
+        // Спрашиваем URL
+        const url = prompt('Введите ссылку (начинается с https://):', 'https://');
+        if (!url || url === 'https://') return;
+
+        // Если текст уже был выделен мышкой, делаем ссылкой его. Если нет — просим ввести текст.
+        const linkText = selectedText || prompt('Введите текст ссылки:', 'Перейти по ссылке') || 'ссылка';
+        
+        // Формируем HTML-тег ссылки с цветом акцента Sonora и открытием в новой вкладке
+        const tag = `<a href="${url.trim()}" target="_blank" style="color: var(--accent); text-decoration: underline;">${linkText}</a>`;
+        
         textarea.value = text.substring(0, start) + tag + text.substring(end);
         textarea.focus();
     }
