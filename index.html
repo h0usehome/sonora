@@ -121,10 +121,27 @@
     margin-bottom:44px;
   }
   .hero::before{
-    content:''; position:absolute; inset:0;
-    background:
-      radial-gradient(ellipse at 75% 15%, rgba(255,214,140,0.35), transparent 55%),
-      linear-gradient(0deg, rgba(18,16,20,0.92) 0%, rgba(18,16,20,0.15) 65%, transparent 100%);
+    content:''; position:absolute; inset:0; z-index: 1;
+    background: 
+      linear-gradient(0deg, rgba(18,16,20,0.98) 0%, rgba(18,16,20,0.5) 50%, rgba(18,16,20,0.2) 100%),
+      linear-gradient(90deg, rgba(18,16,20,0.95) 0%, rgba(18,16,20,0.2) 60%, transparent 100%);
+  }
+  
+  /* Контейнер коллажа */
+  .hero-collage {
+    position: absolute; inset: 0; z-index: 0;
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0;
+    opacity: 0.45; /* Прозрачность обложек */
+  }
+  .hero-collage .cover-item {
+    aspect-ratio: 1; background-size: cover; background-position: center;
+  }
+  
+  /* Поднимаем контент над фоном */
+  .hero-content {
+    position:relative; z-index:2; padding:28px 32px; max-width:560px;
   }
   .hero-content{position:relative; padding:28px 32px; max-width:560px;}
   .eyebrow{
@@ -337,17 +354,18 @@
 
 <main class="wrap">
 
-  <section class="hero" id="summer">
-    <div class="hero-content" id="hero-content">
-      <p class="eyebrow">Лучшие треки лета</p>
-      <h1>Sun-drenched: подборка июля</h1>
-      <p>Альбомы и синглы, которые звучали чаще всего на пляжах, балконах и в машинах этим летом.</p>
-      <div class="hero-track-list" id="hero-track-list">
-        <span class="skeleton" style="width:220px;height:14px;display:block;"></span>
-      </div>
-      <a class="hero-link" href="summer.html">Весь чарт лета →</a>
+  <section class="hero" id="playlists-hero">
+    <!-- Сюда JS загрузит картинки обложек -->
+    <div class="hero-collage" id="hero-collage"></div>
+    
+    <div class="hero-content">
+      <p class="eyebrow">Новый раздел</p>
+      <h1>Кураторские подборки</h1>
+      <p>Музыка под настроение, жанровые исследования и плейлисты для фокуса. Отбираем лучшее из коллекции.</p>
+      <a class="hero-link" href="playlists.html">Смотреть все подборки →</a>
     </div>
   </section>
+
 
   <section id="releases">
     <div class="section-head">
@@ -449,15 +467,7 @@ async function fetchLatestAdded(limit = 10){
   return data;
 }
 
-async function fetchSummerPicks(){
-  const { data, error } = await supabase
-    .from(RELEASE_CARDS_VIEW)
-    .select('*')
-    .eq('is_summer_pick', true)
-    .order('summer_pick_rank', { ascending: true });
-  if (error) throw error;
-  return data;
-}
+
 
 async function searchReleases(query){
   if (!query.trim()) return fetchLatestAdded(10);
@@ -487,23 +497,25 @@ async function renderReleaseGrid(){
   }
 }
 
-async function renderHero(){
-  const list = document.getElementById('hero-track-list');
+// Загружает последние обложки из базы и строит коллаж
+async function renderHeroCollage(){
+  const collage = document.getElementById('hero-collage');
   try {
-    const picks = await fetchSummerPicks();
-    picks.forEach(cacheRelease);
-    if (!picks.length){
-      list.innerHTML = `<span class="state-msg">Подборка ещё формируется.</span>`;
-      return;
+    const { data, error } = await supabase
+      .from(RELEASE_CARDS_VIEW)
+      .select('cover_url, cover_theme')
+      .not('cover_url', 'is', null) // Берем только те, где есть картинка
+      .limit(16); // 16 штук хватит, чтобы заполнить баннер
+
+    if (error) throw error;
+
+    if (data && data.length) {
+      collage.innerHTML = data.map(r => 
+        `<div class="cover-item" style="background-image: url('${r.cover_url}')"></div>`
+      ).join('');
     }
-    const shown = picks.slice(0, 3);
-    const rest = picks.length - shown.length;
-    list.innerHTML = shown.map((p, i) =>
-      `<button data-id="${p.id}">${String(i+1).padStart(2,'0')} ${p.summer_pick_label || p.title}</button>`
-    ).join('') + (rest > 0 ? `<span>+${rest} трек${rest === 1 ? '' : 'ов'}</span>` : '');
   } catch (err){
-    console.error(err);
-    list.innerHTML = `<span class="state-msg error">Не удалось загрузить подборку.</span>`;
+    console.error('Ошибка загрузки обложек для баннера:', err);
   }
 }
 
@@ -535,7 +547,7 @@ document.getElementById('footer-updated').textContent =
   `Обновлено ${new Date().toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}`;
 
 Promise.all([
-  renderHero(),
+  renderHeroCollage(),
   renderReleaseGrid(),
 ]);
 
