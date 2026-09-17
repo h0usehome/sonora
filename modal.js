@@ -95,7 +95,8 @@ export function openModal(release) {
   const reviewSection = document.getElementById('modal-review-section');
   if (release.review) {
     reviewSection.style.display = '';
-    document.getElementById('modal-review').textContent = release.review;
+    // Теперь браузер будет превращать HTML-теги в настоящие ссылки:
+    document.getElementById('modal-review').innerHTML = release.review; 
   } else {
     reviewSection.style.display = 'none';
   }
